@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minutagem</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --fundo:#EEF2EE; --sup:#FFFFFF; --tinta:#16261E; --suave:#5B6B62; --linha:#D5DED8;
+  --destaque:#C8102E; --tit:#1F5A41; --ent:#79AE92; --banco:#D6E5DB; --foco:#2B6CB0;
+  --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --texto:"Barlow",system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root{
+  --fundo:#0F1712; --sup:#17221C; --tinta:#E4ECE7; --suave:#92A39A; --linha:#2A3830;
+  --destaque:#FF4D5E; --tit:#5FBF8F; --ent:#2F7457; --banco:#24352C; --foco:#7FB3F0; color-scheme:dark;}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--fundo);color:var(--tinta);font:15px/1.45 var(--texto)}
+.topo{padding:20px clamp(14px,3vw,32px) 10px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 24px;justify-content:space-between}
+.marca{font:600 15px var(--cond);color:var(--suave);letter-spacing:.02em}
+h1{font:700 clamp(34px,6vw,58px)/0.95 var(--cond);margin:2px 0 0;letter-spacing:-.01em}
+.atual{color:var(--suave);font-size:13px}
+.filtros{display:flex;flex-wrap:wrap;gap:10px 14px;padding:10px clamp(14px,3vw,32px);border-top:1px solid var(--linha);border-bottom:1px solid var(--linha);background:var(--sup)}
+.filtros label{display:flex;flex-direction:column;font-size:12px;color:var(--suave);gap:3px}
+select,input{font:inherit;font-size:14px;color:var(--tinta);background:var(--fundo);border:1px solid var(--linha);border-radius:6px;padding:6px 8px;min-width:0}
+input[type=number]{width:82px}
+:focus-visible{outline:2px solid var(--foco);outline-offset:2px}
+.abas{display:flex;gap:4px;padding:14px clamp(14px,3vw,32px) 0;overflow-x:auto}
+.abas button{font:600 17px var(--cond);background:none;border:0;border-bottom:3px solid transparent;color:var(--suave);padding:6px 12px;cursor:pointer;white-space:nowrap}
+.abas button[aria-selected=true]{color:var(--tinta);border-color:var(--destaque)}
+main{padding:14px clamp(14px,3vw,32px) 40px}
+.legenda{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--suave);margin:0 0 10px}
+.legenda span{display:inline-flex;align-items:center;gap:6px}
+.rolar{overflow-x:auto;background:var(--sup);border:1px solid var(--linha);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--linha)}
+th{font:600 14px var(--cond);color:var(--suave);position:sticky;top:0;background:var(--sup);cursor:pointer;user-select:none}
+th[data-ativo]{color:var(--tinta)}
+th:first-child,td:first-child,th.esq,td.esq{text-align:left}
+tr.cab td{background:var(--fundo);font:700 16px var(--cond);text-align:left;color:var(--tinta)}
+tr.cab small{font:400 13px var(--texto);color:var(--suave);margin-left:10px}
+.num{font-variant-numeric:tabular-nums}
+.nome{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.nome:hover{text-decoration:underline}
+.nome.sel::after{content:"●";color:var(--destaque);margin-left:6px;font-size:10px;vertical-align:middle}
+.barra{display:inline-block;width:70px;height:6px;background:var(--banco);border-radius:3px;margin-left:8px;vertical-align:middle;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--tit)}
+.faixa{display:flex;gap:2px;align-items:center}
+.q{width:7px;height:16px;border-radius:1.5px;flex:none}
+.q.t{background:var(--tit)} .q.e{background:var(--ent)} .q.b{background:var(--banco)}
+.q.n{box-shadow:inset 0 0 0 1px var(--suave);opacity:.55} .q.p{opacity:0}
+.grade{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.bloco{background:var(--sup);border:1px solid var(--linha);border-radius:10px;padding:14px 16px}
+.bloco h2{font:700 22px var(--cond);margin:0 0 8px}
+.bloco h3{font:600 16px var(--cond);margin:14px 0 6px;color:var(--suave)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--linha);background:var(--sup);border-radius:999px;padding:4px 6px 4px 12px;font-size:14px}
+.chip b{width:10px;height:10px;border-radius:50%}
+.chip button{border:0;background:var(--fundo);color:var(--tinta);border-radius:50%;width:22px;height:22px;cursor:pointer}
+.melhor{font-weight:600;color:var(--tit)}
+.vazio{color:var(--suave);padding:24px;text-align:center}
+.nota{color:var(--suave);font-size:13px;margin:8px 0 0;max-width:75ch}
+.lista{list-style:none;margin:0;padding:0}
+.lista li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--linha)}
+.lista li span:last-child{color:var(--suave)}
+.placar{font:700 clamp(28px,5vw,44px)/1 var(--cond);margin:4px 0 2px}
+canvas{max-height:340px}
+.dest td{background:color-mix(in srgb,var(--destaque) 9%,transparent)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="topo">
+  <div><div class="marca" id="marca">Minutagem</div><h1 id="titulo">Carregando…</h1></div>
+  <div class="atual" id="atual"></div>
+</header>
+<section class="filtros" id="filtros" aria-label="Filtros"></section>
+<nav class="abas" role="tablist" id="abas">
+  <button role="tab" data-aba="elenco" aria-selected="true">Elenco</button>
+  <button role="tab" data-aba="comparar" aria-selected="false">Comparar atletas</button>
+  <button role="tab" data-aba="posicao" aria-selected="false">Posição entre times</button>
+  <button role="tab" data-aba="ultimo" aria-selected="false">Último jogo</button>
+</nav>
+<main id="app"></main>
+
+<script>
+const $ = s => document.querySelector(s);
+const ORD = ["GOL","LAT","ZAG","VOL","MEI","EXT","ATA"];
+const NOME_GRUPO = {GOL:"Goleiros",LAT:"Laterais",ZAG:"Zagueiros",VOL:"Volantes",MEI:"Meias",EXT:"Extremos",ATA:"Atacantes","—":"Sem posição"};
+const CORES = ["#C8102E","#1F7A55","#2B6CB0","#B7791F"];
+const S = {comp:"all", time:0, grupo:"all", met:"r", minJ:0, minM:0, de:"", ate:"", mando:"all",
+           aba:"elenco", cmp:[], ord:{k:"grupo", d:-1}, grupoPos:"ATA"};
+let D, grafico;
+
+const fmt = n => Math.round(n).toLocaleString("pt-BR");
+const pc = n => n.toFixed(1).replace(".", ",") + "%";
+const dataBR = d => d.slice(8,10) + "/" + d.slice(5,7);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+async function iniciar(){
+  try {
+    const r = await fetch("data/dados.json", {cache:"no-store"});
+    if (!r.ok) throw new Error(r.status);
+    D = await r.json();
+  } catch(e) {
+    $("#titulo").textContent = "Sem dados ainda";
+    $("#app").innerHTML = '<p class="vazio">O arquivo data/dados.json ainda não existe. No GitHub, abra a aba Actions, escolha “Atualizar minutagem” e clique em “Run workflow”. Quando terminar, recarregue esta página.</p>';
+    return;
+  }
+  preparar(); montarFiltros(); desenhar();
+}
+
+function preparar(){
+  D.porTime = D.times.map(() => []);
+  D.jogos.forEach((g,i) => { D.porTime[g[2]].push(i); D.porTime[g[3]].push(i); });
+  D.porTime.forEach(l => l.sort((a,b) => D.jogos[a][1].localeCompare(D.jogos[b][1])));
+  D.part = D.atletas.map(() => new Map());
+  D.p.forEach(r => D.part[r[1]].set(r[0], r));
+  D.atlTime = D.times.map(() => []);
+  D.atletas.forEach((a,i) => D.atlTime[a[1]].push(i));
+  const cap = D.times.findIndex(t => /athletico/i.test(t));
+  S.time = cap >= 0 ? cap : 0;
+  const d = new Date(D.atualizado);
+  $("#atual").textContent = "Atualizado em " + d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
+
+function montarFiltros(){
+  const op = (v,t,sel) => `<option value="${esc(v)}"${sel?" selected":""}>${esc(t)}</option>`;
+  const times = D.times.map((t,i) => [i,t]).sort((a,b) => a[1].localeCompare(b[1]));
+  $("#filtros").innerHTML = `
+    <label>Competição<select id="f-comp">${op("all","Todas")}${D.competicoes.map((c,i) => op(i,c)).join("")}</select></label>
+    <label>Time<select id="f-time">${times.map(([i,t]) => op(i,t,i===S.time)).join("")}</select></label>
+    <label>Posição<select id="f-grupo">${op("all","Todas")}${ORD.map(g => op(g,NOME_GRUPO[g])).join("")}${op("—","Sem posição")}</select></label>
+    <label>Minutos<select id="f-met">${op("r","Reais (com acréscimos)")}${op("90","Padrão 90'")}</select></label>
+    <label>Mando<select id="f-mando">${op("all","Todos")}${op("casa","Casa")}${op("fora","Fora")}</select></label>
+    <label>De<input type="date" id="f-de"></label>
+    <label>Até<input type="date" id="f-ate"></label>
+    <label>Mín. jogos<input type="number" min="0" id="f-minJ" value="0"></label>
+    <label>Mín. minutos<input type="number" min="0" step="50" id="f-minM" value="0"></label>`;
+  const liga = (id, k, num) => $(id).addEventListener("input", e => { S[k] = num ? (+e.target.value || 0) : e.target.value; desenhar(); });
+  liga("#f-comp","comp"); liga("#f-time","time",true); liga("#f-grupo","grupo"); liga("#f-met","met");
+  liga("#f-mando","mando"); liga("#f-de","de"); liga("#f-ate","ate"); liga("#f-minJ","minJ",true); liga("#f-minM","minM",true);
+  $("#abas").addEventListener("click", e => {
+    const b = e.target.closest("button[data-aba]"); if (!b) return;
+    S.aba = b.dataset.aba;
+    document.querySelectorAll("#abas button").forEach(x => x.setAttribute("aria-selected", x === b));
+    desenhar();
+  });
+}
+
+function jogosDoTime(t){
+  return D.porTime[t].filter(j => {
+    const g = D.jogos[j];
+    if (S.comp !== "all" && g[0] !== +S.comp) return false;
+    if (S.de && g[1] < S.de) return false;
+    if (S.ate && g[1] > S.ate) return false;
+    if (S.mando === "casa" && g[2] !== t) return false;
+    if (S.mando === "fora" && g[3] !== t) return false;
+    return true;
+  });
+}
+
+function stats(a){
+  const t = D.atletas[a][1], jogos = jogosDoTime(t);
+  let primeira = null;
+  for (const j of D.part[a].keys()) {
+    const g = D.jogos[j];
+    if (S.comp !== "all" && g[0] !== +S.comp) continue;
+    if (!primeira || g[1] < primeira) primeira = g[1];
+  }
+  const o = {a, t, jt:jogos.length, desde:0, rel:0, nrel:0, tit:0, ent:0, banco:0, min:0, poss:0, faixa:[]};
+  for (const j of jogos) {
+    const g = D.jogos[j];
+    if (!primeira || g[1] < primeira) { o.faixa.push(["p", j, null]); continue; }
+    o.desde++;
+    o.poss += S.met === "90" ? 90 : (g[6] || 90);
+    const r = D.part[a].get(j);
+    if (!r) { o.nrel++; o.faixa.push(["n", j, null]); continue; }
+    o.rel++;
+    const m = S.met === "90" ? r[3] : (r[4] ?? r[3]);
+    o.min += m;
+    if (r[2] === 0) o.tit++; else if (r[2] === 1) o.ent++; else o.banco++;
+    o.faixa.push([["t","e","b"][r[2]], j, m]);
+  }
+  o.jogou = o.tit + o.ent;
+  o.pct = o.poss ? 100 * o.min / o.poss : 0;
+  o.mpj = o.jogou ? o.min / o.jogou : 0;
+  o.ptit = o.desde ? 100 * o.tit / o.desde : 0;
+  return o;
+}
+
+const STATUS = {t:"Titular", e:"Entrou", b:"Banco, não entrou", n:"Não relacionado"};
+function faixa(o){
+  return `<div class="faixa">${o.faixa.map(([c,j,m]) => {
+    if (c === "p") return `<span class="q p"></span>`;
+    const g = D.jogos[j], adv = g[2] === o.t ? D.times[g[3]] : D.times[g[2]];
+    const tip = `${dataBR(g[1])} x ${adv} (${g[2] === o.t ? "casa" : "fora"}): ${STATUS[c]}${m ? ", " + m + " min" : ""}`;
+    return `<span class="q ${c}" title="${esc(tip)}"></span>`;
+  }).join("")}</div>`;
+}
+const legenda = `<div class="legenda">
+  <span><i class="q t"></i>Titular</span><span><i class="q e"></i>Entrou</span>
+  <span><i class="q b"></i>Banco, não entrou</span><span><i class="q n"></i>Não relacionado</span>
+  <span>Cada barra é um jogo do time, em ordem cronológica</span></div>`;
+
+function desenhar(){
+  $("#titulo").textContent = D.times[S.time];
+  $("#marca").textContent = "Minutagem " + D.temporada + (S.comp === "all" ? "" : " · " + D.competicoes[S.comp]);
+  ({elenco:abaElenco, comparar:abaComparar, posicao:abaPosicao, ultimo:abaUltimo})[S.aba]();
+}
+
+/* ---------------- Elenco ---------------- */
+const COLS = [
+  ["nome","Atleta"],["grupo","Pos."],["rel","Relac."],["nrel","Não relac."],["tit","Titular"],["ent","Entrou"],
+  ["banco","Banco"],["min","Minutos"],["pct","% min. possíveis"],["mpj","Min./jogo"],["ptit","% titular"]];
+function valor(o,k){
+  if (k === "nome") return D.atletas[o.a][0];
+  if (k === "grupo") return ORD.indexOf(D.atletas[o.a][2]) * 1e6 - o.min;
+  return o[k];
+}
+function abaElenco(){
+  let linhas = D.atlTime[S.time].map(stats).filter(o => o.rel > 0)
+    .filter(o => (S.grupo === "all" || D.atletas[o.a][2] === S.grupo) && o.jogou >= S.minJ && o.min >= S.minM);
+  if (!linhas.length) { $("#app").innerHTML = '<p class="vazio">Nenhum atleta atende aos filtros. Reduza o mínimo de jogos ou minutos.</p>'; return; }
+  const {k,d} = S.ord;
+  linhas.sort((x,y) => {
+    const a = valor(x,k), b = valor(y,k);
+    if (k === "grupo") return a - b;
+    if (k === "nome") return d === -1 ? a.localeCompare(b) : b.localeCompare(a);
+    return d === -1 ? b - a : a - b;
+  });
+  const cab = COLS.map(([c,t]) => `<th data-k="${c}"${c===k?" data-ativo":""} class="${c==="nome"||c==="grupo"?"esq":""}">${t}</th>`).join("") + '<th class="esq">Temporada</th>';
+  let html = "", grupoAtual = null;
+  for (const o of linhas) {
+    const g = D.atletas[o.a][2];
+    if (k === "grupo" && g !== grupoAtual) {
+      grupoAtual = g;
+      const doGrupo = linhas.filter(x => D.atletas[x.a][2] === g);
+      const tot = doGrupo.reduce((s,x) => s + x.min, 0), lid = doGrupo[0];
+      html += `<tr class="cab"><td colspan="${COLS.length+1}">${NOME_GRUPO[g] || g}<small>${lid && tot ? D.atletas[lid.a][0] + " tem " + pc(100*lid.min/tot) + " dos minutos da posição" : ""}</small></td></tr>`;
+    }
+    const sel = S.cmp.includes(o.a);
+    html += `<tr><td><button class="nome${sel?" sel":""}" data-a="${o.a}" title="Adicionar à comparação">${esc(D.atletas[o.a][0])}</button></td>
+      <td class="esq">${g}</td><td class="num">${o.rel}</td><td class="num">${o.nrel}</td><td class="num">${o.tit}</td>
+      <td class="num">${o.ent}</td><td class="num">${o.banco}</td><td class="num">${fmt(o.min)}</td>
+      <td class="num">${pc(o.pct)}<span class="barra"><i style="width:${Math.min(100,o.pct)}%"></i></span></td>
+      <td class="num">${fmt(o.mpj)}</td><td class="num">${pc(o.ptit)}</td><td class="esq">${faixa(o)}</td></tr>`;
+  }
+  $("#app").innerHTML = legenda + `<div class="rolar"><table><thead><tr>${cab}</tr></thead><tbody>${html}</tbody></table></div>
+    <p class="nota">Percentuais contam só a partir do primeiro jogo em que o atleta foi relacionado, para não penalizar quem chegou no meio da temporada. Clique no nome para levar o atleta à aba Comparar atletas.</p>`;
+  $("#app thead").addEventListener("click", e => {
+    const th = e.target.closest("th[data-k]"); if (!th) return;
+    S.ord = {k: th.dataset.k, d: S.ord.k === th.dataset.k ? -S.ord.d : -1}; abaElenco();
+  });
+  $("#app tbody").addEventListener("click", e => {
+    const b = e.target.closest(".nome"); if (!b) return;
+    alternar(+b.dataset.a); b.classList.toggle("sel", S.cmp.includes(+b.dataset.a));
+  });
+}
+function alternar(a){
+  const i = S.cmp.indexOf(a);
+  if (i >= 0) S.cmp.splice(i,1); else { if (S.cmp.length >= 4) S.cmp.shift(); S.cmp.push(a); }
+}
+
+/* ---------------- Comparar ---------------- */
+function abaComparar(){
+  const rotulos = D.atletas.map((a,i) => [i, `${a[0]} (${D.times[a[1]]})`]);
+  $("#app").innerHTML = `
+    <div class="bloco"><h2>Comparar atletas</h2>
+      <label style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input list="lista-atl" id="busca" placeholder="Digite o nome do atleta" style="flex:1;min-width:220px">
+        <datalist id="lista-atl">${rotulos.map(([,r]) => `<option value="${esc(r)}">`).join("")}</datalist>
+      </label>
+      <div class="chips" id="chips"></div>
+      <p class="nota">Até 4 atletas, de qualquer time. Também dá para adicionar clicando no nome na aba Elenco.</p>
+    </div><div id="cmp-corpo"></div>`;
+  $("#busca").addEventListener("change", e => {
+    const achado = rotulos.find(([,r]) => r === e.target.value);
+    if (achado && !S.cmp.includes(achado[0])) { alternar(achado[0]); e.target.value = ""; corpoComparar(); }
+  });
+  corpoComparar();
+}
+function corpoComparar(){
+  $("#chips").innerHTML = S.cmp.map((a,i) => `<span class="chip"><b style="background:${CORES[i]}"></b>${esc(D.atletas[a][0])}<button data-a="${a}" aria-label="Remover">×</button></span>`).join("");
+  $("#chips").onclick = e => { const b = e.target.closest("button"); if (b) { alternar(+b.dataset.a); corpoComparar(); } };
+  const alvo = $("#cmp-corpo");
+  if (grafico) { grafico.destroy(); grafico = null; }
+  if (!S.cmp.length) { alvo.innerHTML = '<p class="vazio">Adicione atletas pela busca acima.</p>'; return; }
+  const st = S.cmp.map(stats);
+  const linhas = [
+    ["Time", o => D.times[o.t], null], ["Posição", o => D.atletas[o.a][2], null],
+    ["Jogos do time desde a chegada", o => o.desde, null], ["Relacionado", o => o.rel, 1],
+    ["Não relacionado", o => o.nrel, -1], ["Titular", o => o.tit, 1], ["Entrou", o => o.ent, 0],
+    ["Banco, não entrou", o => o.banco, 0], ["Minutos", o => o.min, 1], ["% dos minutos possíveis", o => o.pct, 1],
+    ["Minutos por jogo jogado", o => o.mpj, 1], ["% de titularidade", o => o.ptit, 1]];
+  const fmtv = v => typeof v === "number" ? (Number.isInteger(v) ? fmt(v) : pc(v).replace("%","")) : esc(v);
+  const corpo = linhas.map(([rot, f, dir]) => {
+    const vals = st.map(f), alvoV = dir ? (dir > 0 ? Math.max(...vals) : Math.min(...vals)) : null;
+    return `<tr><td>${rot}</td>${vals.map(v => `<td class="num${dir && st.length>1 && v===alvoV ? " melhor" : ""}">${rot.startsWith("%") ? pc(v) : fmtv(v)}</td>`).join("")}</tr>`;
+  }).join("");
+  alvo.innerHTML = `<div class="grade" style="margin-top:16px">
+    <div class="bloco"><h2>Números</h2><div class="rolar"><table><thead><tr><th class="esq">Indicador</th>${st.map((o,i) => `<th style="color:${CORES[i]}">${esc(D.atletas[o.a][0])}</th>`).join("")}</tr></thead><tbody>${corpo}</tbody></table></div></div>
+    <div class="bloco"><h2>Minutos acumulados</h2><canvas id="graf"></canvas></div></div>
+    <div class="bloco" style="margin-top:16px"><h2>Jogo a jogo</h2>${legenda}
+    ${st.map((o,i) => `<h3 style="color:${CORES[i]}">${esc(D.atletas[o.a][0])} (${esc(D.times[o.t])})</h3>${faixa(o)}`).join("")}</div>`;
+  const datas = [...new Set(st.flatMap(o => o.faixa.filter(f => f[0] !== "p").map(f => D.jogos[f[1]][1])))].sort();
+  const series = st.map((o,i) => {
+    let acc = 0; const porData = {};
+    o.faixa.forEach(([c,j,m]) => { if (c !== "p") { acc += m || 0; porData[D.jogos[j][1]] = acc; } });
+    return {label: D.atletas[o.a][0], data: datas.map(d => porData[d] ?? null), borderColor: CORES[i],
+            backgroundColor: CORES[i], spanGaps: true, pointRadius: 2, tension: 0, borderWidth: 2};
+  });
+  if (window.Chart) {
+    const cs = getComputedStyle(document.documentElement);
+    grafico = new Chart($("#graf"), {type:"line", data:{labels: datas.map(dataBR), datasets: series},
+      options:{responsive:true, interaction:{mode:"index", intersect:false},
+        plugins:{legend:{labels:{color:cs.getPropertyValue("--tinta")}}},
+        scales:{x:{ticks:{color:cs.getPropertyValue("--suave"), maxTicksLimit:12}, grid:{display:false}},
+                y:{ticks:{color:cs.getPropertyValue("--suave")}, grid:{color:cs.getPropertyValue("--linha")}}}}});
+  }
+}
+
+/* ---------------- Posição entre times ---------------- */
+function abaPosicao(){
+  const g = S.grupoPos;
+  const linhas = D.times.map((nome,t) => {
+    const st = D.atlTime[t].filter(a => D.atletas[a][2] === g).map(stats).filter(o => o.jogou > 0 && o.jogou >= S.minJ && o.min >= S.minM).sort((a,b) => b.min - a.min);
+    if (!st.length) return null;
+    const tot = st.reduce((s,o) => s + o.min, 0);
+    return {t, nome, n: st.length, l: st[0], s: st[1], conc: tot ? 100 * st[0].min / tot : 0};
+  }).filter(Boolean).sort((a,b) => b.conc - a.conc);
+  const meu = D.atlTime[S.time].map(stats).filter(o => o.rel > 0);
+  const resumoMeu = ORD.map(gr => {
+    const st = meu.filter(o => D.atletas[o.a][2] === gr && o.jogou > 0).sort((a,b) => b.min - a.min);
+    if (!st.length) return "";
+    const tot = st.reduce((s,o) => s + o.min, 0), res = tot - st[0].min;
+    return `<tr><td>${NOME_GRUPO[gr]}</td><td class="esq">${esc(D.atletas[st[0].a][0])}</td><td class="num">${pc(st[0].pct)}</td>
+      <td class="num">${pc(st[0].ptit)}</td><td class="num">${st.length - 1}</td><td class="num">${fmt(res)}</td><td class="num">${pc(tot ? 100*res/tot : 0)}</td></tr>`;
+  }).join("");
+  $("#app").innerHTML = `
+    <div class="bloco"><h2>${esc(D.times[S.time])}: titular da posição contra reservas</h2>
+      <div class="rolar"><table><thead><tr><th class="esq">Posição</th><th class="esq">Quem mais jogou</th><th>% min. possíveis</th><th>% titular</th><th>Reservas usados</th><th>Min. reservas</th><th>% da posição com reservas</th></tr></thead><tbody>${resumoMeu}</tbody></table></div>
+      <p class="nota">Quanto maior a última coluna, mais o treinador roda a posição.</p></div>
+    <div class="bloco" style="margin-top:16px"><h2>Comparação entre times</h2>
+      <label style="font-size:13px;color:var(--suave)">Posição <select id="f-gpos">${ORD.map(x => `<option value="${x}"${x===g?" selected":""}>${NOME_GRUPO[x]}</option>`).join("")}</select></label>
+      <div class="rolar" style="margin-top:10px"><table><thead><tr><th class="esq">Time</th><th class="esq">Quem mais jogou</th><th>% min. possíveis</th><th>% titular</th><th class="esq">Segundo</th><th>% min. possíveis</th><th>Atletas usados</th><th>Concentração</th></tr></thead>
+      <tbody>${linhas.map(r => `<tr class="${r.t===S.time?"dest":""}"><td>${esc(r.nome)}</td><td class="esq">${esc(D.atletas[r.l.a][0])}</td><td class="num">${pc(r.l.pct)}</td><td class="num">${pc(r.l.ptit)}</td>
+        <td class="esq">${r.s ? esc(D.atletas[r.s.a][0]) : "—"}</td><td class="num">${r.s ? pc(r.s.pct) : "—"}</td><td class="num">${r.n}</td><td class="num">${pc(r.conc)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="nota">Concentração é a fatia dos minutos da posição que ficou com o atleta que mais jogou. As posições dos outros times vêm da sugestão do ESPN; só as que você corrigir em posicoes.csv são revisadas.</p></div>`;
+  $("#f-gpos").addEventListener("input", e => { S.grupoPos = e.target.value; abaPosicao(); });
+}
+
+/* ---------------- Último jogo ---------------- */
+function abaUltimo(){
+  const jogos = jogosDoTime(S.time);
+  if (!jogos.length) { $("#app").innerHTML = '<p class="vazio">Nenhum jogo no período selecionado.</p>'; return; }
+  const j = jogos[jogos.length - 1], g = D.jogos[j], casa = g[2] === S.time;
+  const st = new Map(D.atlTime[S.time].map(a => [a, stats(a)]));
+  const no = [[],[],[]], fora = [];
+  for (const a of D.atlTime[S.time]) {
+    const r = D.part[a].get(j);
+    if (r) no[r[2]].push([a, S.met === "90" ? r[3] : (r[4] ?? r[3])]);
+    else if (st.get(a).rel > 0) fora.push([a, null]);
+  }
+  const ordem = l => l.sort((x,y) => ORD.indexOf(D.atletas[x[0]][2]) - ORD.indexOf(D.atletas[y[0]][2]) || (y[1]||0) - (x[1]||0));
+  const lista = (l, mostraMin) => `<ul class="lista">${ordem(l).map(([a,m]) => `<li><span>${D.atletas[a][2]} ${esc(D.atletas[a][0])}</span><span>${mostraMin ? m + " min, " : ""}${pc(st.get(a).pct)} na temporada</span></li>`).join("") || "<li><span>Ninguém</span></li>"}</ul>`;
+  $("#app").innerHTML = `<div class="bloco"><h2>Último jogo no período</h2>
+      <div class="placar">${esc(D.times[g[2]])} ${g[4] ?? ""} x ${g[5] ?? ""} ${esc(D.times[g[3]])}</div>
+      <p class="nota">${g[1].split("-").reverse().join("/")}, ${casa ? "em casa" : "fora"}, ${D.competicoes[g[0]]}${g[6] ? ", " + g[6] + " min de jogo com acréscimos" : ""}</p></div>
+    <div class="grade" style="margin-top:16px">
+      <div class="bloco"><h2>Titulares</h2>${lista(no[0], true)}</div>
+      <div class="bloco"><h2>Entraram</h2>${lista(no[1], true)}<h3>Banco, não entraram</h3>${lista(no[2], false)}</div>
+      <div class="bloco"><h2>Não relacionados</h2>${lista(fora, false)}<p class="nota">Atletas que já foram relacionados na temporada e ficaram fora deste jogo.</p></div>
+    </div>`;
+}
+
+iniciar();
+</script>
+</body>
+</html>
