@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minutagem</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>try{const t=localStorage.getItem("tema");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<style>
+:root{
+  --fundo:#FFFFFF; --sup:#F6F7F9; --tinta:#1D2329; --suave:#66707B; --linha:#E2E5E9;
+  --destaque:#3D5A80; --tit:#3D5A80; --ent:#9DB5CF; --banco:#E1E7EE; --foco:#3D5A80; --perigo:#B4483C;
+  --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --texto:"Barlow",system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --fundo:#0E1013; --sup:#171A1F; --tinta:#E6E9ED; --suave:#8C95A0; --linha:#2A2F36;
+  --destaque:#8FB0D6; --tit:#8FB0D6; --ent:#4B6686; --banco:#262C34; --foco:#8FB0D6; --perigo:#E08A7F; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --fundo:#0E1013; --sup:#171A1F; --tinta:#E6E9ED; --suave:#8C95A0; --linha:#2A2F36;
+  --destaque:#8FB0D6; --tit:#8FB0D6; --ent:#4B6686; --banco:#262C34; --foco:#8FB0D6; --perigo:#E08A7F; color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--fundo);color:var(--tinta);font:15px/1.5 var(--texto)}
+.topo{padding:22px clamp(14px,3vw,36px) 14px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 24px;justify-content:space-between}
+.marca{font:500 15px var(--cond);color:var(--suave)}
+h1{font:700 clamp(32px,5.5vw,52px)/1 var(--cond);margin:2px 0 0}
+.acoes{display:flex;flex-wrap:wrap;align-items:center;gap:10px;color:var(--suave);font-size:13px}
+.btn{font:500 14px var(--texto);color:var(--tinta);background:var(--sup);border:1px solid var(--linha);border-radius:8px;padding:7px 12px;cursor:pointer}
+.btn:hover{border-color:var(--suave)}
+.btn.prim{background:var(--destaque);border-color:var(--destaque);color:var(--fundo)}
+.btn.ativo{border-color:var(--destaque);color:var(--destaque)}
+.filtros{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px 16px;padding:14px clamp(14px,3vw,36px);background:var(--sup);border-block:1px solid var(--linha)}
+.filtros label{display:flex;flex-direction:column;font-size:12px;color:var(--suave);gap:4px}
+select,input{font:inherit;font-size:14px;color:var(--tinta);background:var(--fundo);border:1px solid var(--linha);border-radius:8px;padding:7px 9px;min-width:0;width:100%}
+:focus-visible{outline:2px solid var(--foco);outline-offset:2px}
+.abas{display:flex;gap:6px;padding:16px clamp(14px,3vw,36px) 0;overflow-x:auto;border-bottom:1px solid var(--linha)}
+.abas button{font:600 17px var(--cond);background:none;border:0;border-bottom:3px solid transparent;color:var(--suave);padding:6px 12px 8px;cursor:pointer;white-space:nowrap}
+.abas button[aria-selected=true]{color:var(--tinta);border-color:var(--destaque)}
+main{padding:20px clamp(14px,3vw,36px) 90px}
+.explica{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:13px;color:var(--suave);margin:0 0 12px}
+.explica span{display:inline-flex;align-items:center;gap:6px}
+.explica strong{color:var(--tinta);font-weight:500}
+.rolar{overflow-x:auto;border:1px solid var(--linha);border-radius:12px;background:var(--fundo)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+th,td{padding:9px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--linha)}
+th{font:600 14px var(--cond);color:var(--suave);background:var(--sup);cursor:pointer;user-select:none;vertical-align:bottom}
+th[data-ativo]{color:var(--tinta)}
+th:first-child,td:first-child,.esq{text-align:left}
+td:first-child,th:first-child{position:sticky;left:0;z-index:1;background:inherit}
+tbody tr{background:var(--fundo)}
+tbody tr:hover{background:var(--sup)}
+tr.cab td{background:var(--sup);font:700 17px var(--cond);text-align:left;padding-top:14px}
+tr.cab small{font:400 13px var(--texto);color:var(--suave);margin-left:10px}
+.num{font-variant-numeric:tabular-nums}
+.nome{background:none;border:0;padding:0;font:500 14px var(--texto);color:var(--tinta);cursor:pointer;text-align:left}
+.nome:hover{color:var(--destaque)}
+.nome.sel::after{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--destaque);margin-left:7px;vertical-align:middle}
+.pos{display:inline-block;min-width:38px;text-align:center;font:600 13px var(--cond);border:1px solid var(--linha);border-radius:6px;padding:1px 6px;color:var(--suave)}
+.pos.mudou{border-color:var(--destaque);color:var(--destaque)}
+td select{width:auto;padding:3px 6px;font-size:13px}
+.barra{display:inline-block;width:64px;height:6px;background:var(--banco);border-radius:3px;margin-left:8px;vertical-align:middle;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--tit)}
+.faixa{display:flex;gap:3px;align-items:center}
+.q{width:10px;height:18px;border-radius:2px;flex:none;display:inline-block}
+.q.t{background:var(--tit)} .q.e{background:var(--ent)} .q.b{background:var(--banco)}
+.q.n{box-shadow:inset 0 0 0 1.5px var(--linha)} .q.p{opacity:0}
+.grade{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))}
+.bloco{background:var(--fundo);border:1px solid var(--linha);border-radius:12px;padding:16px 18px}
+.bloco h2{font:700 22px var(--cond);margin:0 0 10px}
+.bloco h3{font:600 16px var(--cond);margin:16px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--linha);border-radius:999px;padding:4px 6px 4px 12px;font-size:14px}
+.chip b{width:10px;height:10px;border-radius:50%}
+.chip button{border:0;background:var(--sup);color:var(--tinta);border-radius:50%;width:22px;height:22px;cursor:pointer}
+.melhor{font-weight:600;color:var(--destaque)}
+.vazio{color:var(--suave);padding:28px;text-align:center}
+.nota{color:var(--suave);font-size:13px;margin:10px 0 0;max-width:80ch}
+.lista{list-style:none;margin:0;padding:0}
+.lista li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--linha)}
+.lista li span:last-child{color:var(--suave)}
+.placar{font:700 clamp(26px,4.5vw,40px)/1.1 var(--cond);margin:4px 0}
+canvas{max-height:340px}
+.dest td{background:color-mix(in srgb,var(--destaque) 10%,var(--fundo))}
+/* cartão do atleta */
+#cartao{position:fixed;z-index:20;width:300px;max-width:calc(100vw - 24px);background:var(--fundo);border:1px solid var(--linha);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:16px;display:none}
+#cartao.on{display:block}
+.c-topo{display:flex;gap:14px;align-items:center}
+.c-foto{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--sup);flex:none;display:flex;align-items:center;justify-content:center;font:700 24px var(--cond);color:var(--suave);border:1px solid var(--linha)}
+.c-nome{font:700 22px/1.05 var(--cond)}
+.c-sub{color:var(--suave);font-size:13px;margin-top:3px}
+.c-dados{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:14px 0 0;font-size:14px}
+.c-dados dt{color:var(--suave)} .c-dados dd{margin:0}
+.c-temp{margin-top:12px;padding-top:12px;border-top:1px solid var(--linha);font-size:14px}
+.c-acoes{display:flex;gap:8px;margin-top:12px}
+/* barra de edição */
+#barra-ed{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:15;display:none;align-items:center;gap:12px;background:var(--tinta);color:var(--fundo);border-radius:12px;padding:10px 12px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px;max-width:calc(100vw - 24px);flex-wrap:wrap}
+#barra-ed.on{display:flex}
+#barra-ed .btn{background:transparent;color:var(--fundo);border-color:color-mix(in srgb,var(--fundo) 40%,transparent)}
+#barra-ed .btn.prim{background:var(--fundo);color:var(--tinta)}
+dialog{border:1px solid var(--linha);border-radius:14px;background:var(--fundo);color:var(--tinta);max-width:min(560px,calc(100vw - 24px));padding:20px 22px}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+dialog h2{font:700 24px var(--cond);margin:0 0 8px}
+dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
+dialog li{margin:4px 0}
+.erro{color:var(--perigo);font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* lesões */
+.les-filtros{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px 16px;margin-bottom:18px}
+.les-filtros label{display:flex;flex-direction:column;font-size:12px;color:var(--suave);gap:4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{border:1px solid var(--linha);border-radius:12px;padding:12px 14px;background:var(--fundo)}
+.kpi b{display:block;font:700 34px/1.05 var(--cond);font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px;color:var(--suave)}
+.kpi small{display:block;font-size:12px;color:var(--suave);margin-top:2px}
+.kpi.forte b{color:var(--destaque)}
+.secao{font:700 26px var(--cond);margin:28px 0 10px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{border:1px solid var(--linha);border-radius:999px;padding:3px 10px;font-size:13px;color:var(--suave)}
+.carregar{max-width:640px;margin:20px auto;text-align:center}
+.carregar .btn{font-size:16px;padding:12px 20px;margin-top:10px}
+details.bloco summary{cursor:pointer;font:600 18px var(--cond)}
+.exp-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px 14px;margin-top:12px}
+.exp-grade label{display:flex;flex-direction:column;font-size:12px;color:var(--suave);gap:4px}
+.aviso{border-left:3px solid var(--perigo);padding:8px 12px;background:var(--sup);border-radius:6px;font-size:14px;margin:10px 0}
+.ok{color:var(--destaque)}
+#relatorio{display:none}
+@media print{
+  body>*:not(#relatorio){display:none!important}
+  #relatorio{display:block;color:#1D2329;background:#fff;font:11pt/1.45 var(--texto)}
+  @page{size:A4;margin:14mm}
+  #relatorio h1{font:700 26pt/1.1 var(--cond);margin:0}
+  #relatorio h2{font:700 15pt var(--cond);margin:16pt 0 6pt;break-after:avoid}
+  #relatorio table{font-size:9.5pt;border-collapse:collapse;width:100%}
+  #relatorio th,#relatorio td{border-bottom:1px solid #ddd;padding:3pt 5pt;text-align:left;white-space:normal}
+  #relatorio th{background:#f3f4f6;color:#444}
+  #relatorio img{width:100%;break-inside:avoid;margin:4pt 0}
+  #relatorio .r-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6pt}
+  #relatorio .r-kpi{border:1px solid #ddd;border-radius:6pt;padding:6pt}
+  #relatorio .r-kpi b{display:block;font:700 18pt var(--cond)}
+  #relatorio .r-kpi span{font-size:8.5pt;color:#555}
+  #relatorio .r-graf{display:grid;grid-template-columns:1fr 1fr;gap:8pt}
+  #relatorio .quebra{break-before:page}
+  #relatorio .r-nota{font-size:9pt;color:#555}
+}
+</style>
+</head>
+<body>
+<header class="topo">
+  <div><div class="marca" id="marca">Minutagem</div><h1 id="titulo">Carregando…</h1></div>
+  <div class="acoes">
+    <span id="atual"></span>
+    <button class="btn" id="b-tema" title="Alternar tema">Tema: automático</button>
+    <button class="btn" id="b-editar">Editar posições</button>
+  </div>
+</header>
+<section class="filtros" id="filtros" aria-label="Filtros"></section>
+<nav class="abas" role="tablist" id="abas">
+  <button role="tab" data-aba="elenco" aria-selected="true">Elenco</button>
+  <button role="tab" data-aba="comparar" aria-selected="false">Comparar atletas</button>
+  <button role="tab" data-aba="posicao" aria-selected="false">Posição entre times</button>
+  <button role="tab" data-aba="ultimo" aria-selected="false">Último jogo</button>
+  <button role="tab" data-aba="lesoes" aria-selected="false">Lesões</button>
+</nav>
+<main id="app"></main>
+
+<div id="relatorio"></div>
+<div id="cartao" role="dialog" aria-label="Informações do atleta"></div>
+<div id="barra-ed" role="status"><span id="ed-txt"></span>
+  <button class="btn" id="ed-desc">Descartar</button><button class="btn prim" id="ed-salvar">Salvar alterações</button></div>
+
+<dialog id="dlg">
+  <h2>Conectar para editar posições</h2>
+  <p class="nota" style="margin-top:0">Necessário uma vez por computador. A chave fica salva só neste navegador e permite alterar apenas este repositório.</p>
+  <ol>
+    <li>No GitHub, abra <strong>Settings → Developer settings → Personal access tokens → Fine-grained tokens</strong> e clique em <strong>Generate new token</strong>.</li>
+    <li>Em <strong>Repository access</strong>, escolha <strong>Only select repositories</strong> e marque <strong>minutagem</strong>.</li>
+    <li>Em <strong>Permissions</strong>, dê <strong>Read and write</strong> para <strong>Contents</strong> e para <strong>Actions</strong>.</li>
+    <li>Gere a chave, copie e cole abaixo.</li>
+  </ol>
+  <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--suave)">Chave de acesso
+    <input type="password" id="dlg-token" placeholder="github_pat_…" autocomplete="off"></label>
+  <p class="erro" id="dlg-erro"></p>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+    <button class="btn" id="dlg-cancelar">Cancelar</button><button class="btn prim" id="dlg-ok">Conectar</button></div>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const ORD = ["GOL","LAT","ZAG","VOL","MEI","EXT","ATA"];
+const NOME_GRUPO = {GOL:"Goleiros",LAT:"Laterais",ZAG:"Zagueiros",VOL:"Volantes",MEI:"Meias",EXT:"Extremos",ATA:"Atacantes","—":"Sem posição definida"};
+const CORES = ["#3D5A80","#B5736A","#5E8C61","#8A7AB8"];
+const S = {comp:"all", time:0, grupo:"all", met:"r", minJ:0, minM:0, de:"", ate:"", mando:"all",
+           aba:"elenco", cmp:[], ord:{k:"grupo", d:-1}, grupoPos:"ATA", editando:false};
+const pendentes = new Map(); // atleta idx -> grupo novo
+let D, P = {}, grafico;
+
+const fmt = n => Math.round(n).toLocaleString("pt-BR");
+const pc = n => n.toFixed(1).replace(".", ",") + "%";
+const dataBR = d => d.slice(8,10) + "/" + d.slice(5,7);
+const dataLonga = d => d.split("-").reverse().join("/");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const guarda = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} };
+const le = k => { try { return localStorage.getItem(k); } catch(e) { return null; } };
+
+/* ---------------- carga ---------------- */
+async function iniciar(){
+  try {
+    const r = await fetch("data/dados.json", {cache:"no-store"});
+    if (!r.ok) throw new Error(r.status);
+    D = await r.json();
+  } catch(e) {
+    $("#titulo").textContent = "Sem dados ainda";
+    $("#app").innerHTML = '<p class="vazio">O arquivo data/dados.json ainda não existe. No GitHub, abra a aba Actions, escolha “Atualizar minutagem” e clique em “Run workflow”. Quando terminar, recarregue esta página.</p>';
+    return;
+  }
+  try { const r = await fetch("data/perfis.json", {cache:"no-store"}); if (r.ok) P = await r.json(); } catch(e){}
+  preparar(); montarFiltros(); ligarGlobais(); desenhar();
+}
+
+function preparar(){
+  D.porTime = D.times.map(() => []);
+  D.jogos.forEach((g,i) => { D.porTime[g[2]].push(i); D.porTime[g[3]].push(i); });
+  D.porTime.forEach(l => l.sort((a,b) => D.jogos[a][1].localeCompare(D.jogos[b][1])));
+  D.part = D.atletas.map(() => new Map());
+  D.p.forEach(r => D.part[r[1]].set(r[0], r));
+  D.atlTime = D.times.map(() => []);
+  D.atletas.forEach((a,i) => D.atlTime[a[1]].push(i));
+  D.grupoOriginal = D.atletas.map(a => a[2]);
+  const cap = D.times.findIndex(t => /athletico/i.test(t));
+  S.time = cap >= 0 ? cap : 0;
+  const d = new Date(D.atualizado);
+  $("#atual").textContent = "Atualizado em " + d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
+
+function montarFiltros(){
+  const op = (v,t,sel) => `<option value="${esc(v)}"${sel?" selected":""}>${esc(t)}</option>`;
+  const times = D.times.map((t,i) => [i,t]).sort((a,b) => a[1].localeCompare(b[1]));
+  $("#filtros").innerHTML = `
+    <label>Competição<select id="f-comp">${op("all","Todas")}${D.competicoes.map((c,i) => op(i,c)).join("")}</select></label>
+    <label>Time<select id="f-time">${times.map(([i,t]) => op(i,t,i===S.time)).join("")}</select></label>
+    <label>Posição<select id="f-grupo">${op("all","Todas")}${ORD.map(g => op(g,NOME_GRUPO[g])).join("")}${op("—","Sem posição definida")}</select></label>
+    <label>Minutos<select id="f-met">${op("r","Reais, com acréscimos")}${op("90","Padrão de 90 minutos")}</select></label>
+    <label>Mando<select id="f-mando">${op("all","Casa e fora")}${op("casa","Só em casa")}${op("fora","Só fora")}</select></label>
+    <label>De<input type="date" id="f-de"></label>
+    <label>Até<input type="date" id="f-ate"></label>
+    <label>Mínimo de jogos<input type="number" min="0" id="f-minJ" value="0"></label>
+    <label>Mínimo de minutos<input type="number" min="0" step="50" id="f-minM" value="0"></label>`;
+  const liga = (id, k, num) => $(id).addEventListener("input", e => { S[k] = num ? (+e.target.value || 0) : e.target.value; desenhar(); });
+  liga("#f-comp","comp"); liga("#f-time","time",true); liga("#f-grupo","grupo"); liga("#f-met","met");
+  liga("#f-mando","mando"); liga("#f-de","de"); liga("#f-ate","ate"); liga("#f-minJ","minJ",true); liga("#f-minM","minM",true);
+}
+
+function ligarGlobais(){
+  $("#abas").addEventListener("click", e => {
+    const b = e.target.closest("button[data-aba]"); if (!b) return;
+    S.aba = b.dataset.aba;
+    document.querySelectorAll("#abas button").forEach(x => x.setAttribute("aria-selected", x === b));
+    fecharCartao(true); desenhar();
+  });
+  const temas = ["auto","light","dark"], rot = {auto:"automático", light:"claro", dark:"escuro"};
+  let tema = le("tema") || "auto";
+  $("#b-tema").textContent = "Tema: " + rot[tema];
+  $("#b-tema").addEventListener("click", () => {
+    tema = temas[(temas.indexOf(tema) + 1) % 3];
+    if (tema === "auto") { delete document.documentElement.dataset.theme; guarda("tema", null); }
+    else { document.documentElement.dataset.theme = tema; guarda("tema", tema); }
+    $("#b-tema").textContent = "Tema: " + rot[tema];
+    if (S.aba === "comparar") desenhar();
+  });
+  $("#b-editar").addEventListener("click", () => {
+    if (S.editando) { S.editando = false; atualizarEdicao(); desenhar(); return; }
+    if (!le("gh_token")) { abrirDialogo(); return; }
+    S.editando = true; atualizarEdicao(); desenhar();
+  });
+  $("#dlg-cancelar").addEventListener("click", () => $("#dlg").close());
+  $("#dlg-ok").addEventListener("click", conectar);
+  $("#ed-desc").addEventListener("click", () => {
+    for (const [a] of pendentes) D.atletas[a][2] = D.grupoOriginal[a];
+    pendentes.clear(); atualizarEdicao(); desenhar();
+  });
+  $("#ed-salvar").addEventListener("click", salvarGithub);
+  // cartão
+  const app = $("#app");
+  let timer;
+  app.addEventListener("mouseover", e => {
+    const b = e.target.closest(".nome"); if (!b || cartaoFixo) return;
+    clearTimeout(timer); timer = setTimeout(() => abrirCartao(+b.dataset.a, b, false), 180);
+  });
+  app.addEventListener("mouseout", e => {
+    const b = e.target.closest(".nome"); if (!b) return;
+    clearTimeout(timer); if (!cartaoFixo) setTimeout(() => { if (!sobreCartao) fecharCartao(); }, 120);
+  });
+  app.addEventListener("click", e => {
+    const b = e.target.closest(".nome"); if (!b) return;
+    abrirCartao(+b.dataset.a, b, true);
+  });
+  $("#cartao").addEventListener("mouseenter", () => sobreCartao = true);
+  $("#cartao").addEventListener("mouseleave", () => { sobreCartao = false; if (!cartaoFixo) fecharCartao(); });
+  document.addEventListener("click", e => { if (cartaoFixo && !e.target.closest("#cartao") && !e.target.closest(".nome")) fecharCartao(true); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") fecharCartao(true); });
+  window.addEventListener("beforeunload", e => { if (pendentes.size) { e.preventDefault(); e.returnValue = ""; } });
+}
+
+/* ---------------- cálculos ---------------- */
+function jogosDoTime(t){
+  return D.porTime[t].filter(j => {
+    const g = D.jogos[j];
+    if (S.comp !== "all" && g[0] !== +S.comp) return false;
+    if (S.de && g[1] < S.de) return false;
+    if (S.ate && g[1] > S.ate) return false;
+    if (S.mando === "casa" && g[2] !== t) return false;
+    if (S.mando === "fora" && g[3] !== t) return false;
+    return true;
+  });
+}
+function stats(a){
+  const t = D.atletas[a][1], jogos = jogosDoTime(t);
+  let primeira = null;
+  for (const j of D.part[a].keys()) {
+    const g = D.jogos[j];
+    if (S.comp !== "all" && g[0] !== +S.comp) continue;
+    if (!primeira || g[1] < primeira) primeira = g[1];
+  }
+  const o = {a, t, jt:jogos.length, desde:0, rel:0, nrel:0, tit:0, ent:0, banco:0, min:0, poss:0, faixa:[]};
+  for (const j of jogos) {
+    const g = D.jogos[j];
+    if (!primeira || g[1] < primeira) { o.faixa.push(["p", j, null]); continue; }
+    o.desde++;
+    o.poss += S.met === "90" ? 90 : (g[6] || 90);
+    const r = D.part[a].get(j);
+    if (!r) { o.nrel++; o.faixa.push(["n", j, null]); continue; }
+    o.rel++;
+    const m = S.met === "90" ? r[3] : (r[4] ?? r[3]);
+    o.min += m;
+    if (r[2] === 0) o.tit++; else if (r[2] === 1) o.ent++; else o.banco++;
+    o.faixa.push([["t","e","b"][r[2]], j, m]);
+  }
+  o.jogou = o.tit + o.ent;
+  o.pct = o.poss ? 100 * o.min / o.poss : 0;
+  o.mpj = o.jogou ? o.min / o.jogou : 0;
+  o.ptit = o.desde ? 100 * o.tit / o.desde : 0;
+  return o;
+}
+
+const STATUS = {t:"Titular", e:"Entrou durante o jogo", b:"No banco, não entrou", n:"Não relacionado"};
+function faixa(o){
+  return `<div class="faixa">${o.faixa.map(([c,j,m], i) => {
+    if (c === "p") return `<span class="q p"></span>`;
+    const g = D.jogos[j], adv = g[2] === o.t ? D.times[g[3]] : D.times[g[2]];
+    const tip = `Jogo ${i+1}, ${dataBR(g[1])} contra ${adv} (${g[2] === o.t ? "casa" : "fora"}): ${STATUS[c]}${m ? ", " + m + " min" : ""}`;
+    return `<span class="q ${c}" title="${esc(tip)}"></span>`;
+  }).join("")}</div>`;
+}
+const explicaFaixa = `<div class="explica"><strong>Sequência de jogos:</strong>
+  <span>cada quadrado é um jogo do time, do primeiro (à esquerda) ao mais recente (à direita).</span>
+  <span><i class="q t"></i>Titular</span><span><i class="q e"></i>Entrou durante o jogo</span>
+  <span><i class="q b"></i>No banco, não entrou</span><span><i class="q n"></i>Não relacionado</span>
+  <span>Passe o mouse sobre um quadrado para ver o jogo.</span></div>`;
+
+function desenhar(){
+  $("#titulo").textContent = D.times[S.time];
+  $("#marca").textContent = "Minutagem " + D.temporada + (S.comp === "all" ? "" : ", " + D.competicoes[S.comp]);
+  $("#b-editar").textContent = S.editando ? "Sair da edição" : "Editar posições";
+  $("#b-editar").classList.toggle("ativo", S.editando);
+  $("#filtros").style.display = S.aba === "lesoes" ? "none" : "";
+  if (S.aba !== "lesoes") { graficosLes.forEach(g => g.destroy()); graficosLes = []; }
+  ({elenco:abaElenco, comparar:abaComparar, posicao:abaPosicao, ultimo:abaUltimo, lesoes:abaLesoes})[S.aba]();
+}
+
+/* ---------------- Elenco ---------------- */
+const COLS = [
+  ["nome","Atleta"],["grupo","Posição"],["rel","Relacionado"],["nrel","Não relac."],["tit","Titular"],["ent","Entrou"],
+  ["banco","Banco"],["min","Minutos"],["pct","% dos min. possíveis"],["mpj","Min. por jogo"],["ptit","% titular"]];
+function valor(o,k){
+  if (k === "nome") return D.atletas[o.a][0];
+  if (k === "grupo") { const i = ORD.indexOf(D.atletas[o.a][2]); return (i < 0 ? 99 : i) * 1e6 - o.min; }
+  return o[k];
+}
+function celulaPos(a){
+  const g = D.atletas[a][2], mudou = pendentes.has(a);
+  if (!S.editando) return `<span class="pos${mudou?" mudou":""}" title="ESPN: ${esc(D.atletas[a][3])}">${g}</span>`;
+  return `<select data-pos="${a}" aria-label="Posição de ${esc(D.atletas[a][0])}">${[...ORD,"—"].map(x => `<option${x===g?" selected":""}>${x}</option>`).join("")}</select>`;
+}
+function abaElenco(){
+  let linhas = D.atlTime[S.time].map(stats).filter(o => o.rel > 0)
+    .filter(o => (S.grupo === "all" || D.atletas[o.a][2] === S.grupo) && o.jogou >= S.minJ && o.min >= S.minM);
+  if (!linhas.length) { $("#app").innerHTML = '<p class="vazio">Nenhum atleta atende aos filtros. Reduza o mínimo de jogos ou de minutos.</p>'; return; }
+  const {k,d} = S.ord;
+  linhas.sort((x,y) => {
+    const a = valor(x,k), b = valor(y,k);
+    if (k === "grupo") return a - b;
+    if (k === "nome") return d === -1 ? a.localeCompare(b) : b.localeCompare(a);
+    return d === -1 ? b - a : a - b;
+  });
+  const cab = COLS.map(([c,t]) => `<th data-k="${c}"${c===k?" data-ativo":""} class="${c==="nome"||c==="grupo"?"esq":""}">${t}</th>`).join("") + '<th class="esq">Sequência de jogos</th>';
+  let html = "", grupoAtual = null;
+  for (const o of linhas) {
+    const g = D.atletas[o.a][2];
+    if (k === "grupo" && g !== grupoAtual) {
+      grupoAtual = g;
+      const doGrupo = linhas.filter(x => D.atletas[x.a][2] === g);
+      const tot = doGrupo.reduce((s,x) => s + x.min, 0), lid = doGrupo[0];
+      html += `<tr class="cab"><td colspan="${COLS.length+1}">${NOME_GRUPO[g] || g}<small>${lid && tot ? esc(D.atletas[lid.a][0]) + " tem " + pc(100*lid.min/tot) + " dos minutos da posição" : ""}</small></td></tr>`;
+    }
+    const sel = S.cmp.includes(o.a);
+    html += `<tr><td><button class="nome${sel?" sel":""}" data-a="${o.a}">${esc(D.atletas[o.a][0])}</button></td>
+      <td class="esq">${celulaPos(o.a)}</td><td class="num">${o.rel}</td><td class="num">${o.nrel}</td><td class="num">${o.tit}</td>
+      <td class="num">${o.ent}</td><td class="num">${o.banco}</td><td class="num">${fmt(o.min)}</td>
+      <td class="num">${pc(o.pct)}<span class="barra"><i style="width:${Math.min(100,o.pct)}%"></i></span></td>
+      <td class="num">${fmt(o.mpj)}</td><td class="num">${pc(o.ptit)}</td><td class="esq">${faixa(o)}</td></tr>`;
+  }
+  $("#app").innerHTML = explicaFaixa + `<div class="rolar"><table><thead><tr>${cab}</tr></thead><tbody>${html}</tbody></table></div>
+    <p class="nota">Os percentuais contam a partir do primeiro jogo em que o atleta foi relacionado, para não penalizar quem chegou no meio da temporada. Passe o mouse sobre o nome para ver os dados do atleta; clique para fixar o cartão e levar o atleta à comparação.${S.editando ? " Em modo de edição: troque a posição na coluna Posição e clique em Salvar alterações." : ""}</p>`;
+  $("#app thead").addEventListener("click", e => {
+    const th = e.target.closest("th[data-k]"); if (!th) return;
+    S.ord = {k: th.dataset.k, d: S.ord.k === th.dataset.k ? -S.ord.d : -1}; abaElenco();
+  });
+  $("#app tbody").addEventListener("change", e => {
+    const s = e.target.closest("select[data-pos]"); if (!s) return;
+    const a = +s.dataset.pos;
+    D.atletas[a][2] = s.value;
+    if (s.value === D.grupoOriginal[a]) pendentes.delete(a); else pendentes.set(a, s.value);
+    atualizarEdicao();
+  });
+}
+
+/* ---------------- cartão do atleta ---------------- */
+let cartaoFixo = false, sobreCartao = false;
+function idade(nasc){
+  if (!nasc) return null;
+  const n = new Date(nasc + "T12:00:00"), h = new Date();
+  let i = h.getFullYear() - n.getFullYear();
+  if (h < new Date(h.getFullYear(), n.getMonth(), n.getDate())) i--;
+  return i;
+}
+function iniciais(nome){ return nome.split(" ").filter(Boolean).map(p => p[0]).slice(0,2).join("").toUpperCase(); }
+function abrirCartao(a, ancora, fixar){
+  const at = D.atletas[a], aid = at[4], p = P[aid] || [], o = stats(a);
+  const clube = dadosClube(a);
+  const [nomeC, nascE, nac, alt, peso, foto, local] = p;
+  const nasc = clube?.nasc || nascE;
+  const id = idade(nasc);
+  const fotoUrl = clube?.foto || foto || (aid ? `https://a.espncdn.com/i/headshots/soccer/players/full/${aid}.png` : "");
+  const dados = [
+    ["Idade", id != null ? `${id} anos (${dataLonga(nasc)})` : ""],
+    ["Nascimento", local], ["Nacionalidade", nac], ["Altura", alt], ["Peso", peso], ["Camisa", at[5]],
+    ["Posição", `${NOME_GRUPO[at[2]] || at[2]} (ESPN: ${at[3]})`]].filter(([,v]) => v);
+  const sel = S.cmp.includes(a);
+  const c = $("#cartao");
+  c.innerHTML = `<div class="c-topo">
+      ${fotoUrl ? `<img class="c-foto" src="${esc(fotoUrl)}" alt="" onerror="this.outerHTML='<div class=&quot;c-foto&quot;>${esc(iniciais(at[0]))}</div>'">` : `<div class="c-foto">${esc(iniciais(at[0]))}</div>`}
+      <div><div class="c-nome">${esc(at[0])}</div><div class="c-sub">${esc(nomeC && nomeC !== at[0] ? nomeC : D.times[at[1]])}</div>
+      ${nomeC && nomeC !== at[0] ? `<div class="c-sub">${esc(D.times[at[1]])}</div>` : ""}</div></div>
+    <dl class="c-dados">${dados.map(([k,v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${!p.length && !clube ? '<p class="nota" style="margin-top:8px">O ESPN não tem cadastro completo deste atleta.</p>' : ""}
+    ${clube ? `<div class="c-temp">${clube.les.length ? `Lesões em ${D.temporada}: ${clube.les.length}, ${fmt(clube.les.reduce((s,l) => s + (l.dias || 0), 0))} dias perdidos${clube.les.some(l => l.aberto) ? ", em tratamento agora" : ""}.` : `Sem lesões registradas em ${D.temporada}.`}</div>` : ""}
+    <div class="c-temp">${o.jogou} jogos, ${fmt(o.min)} min, ${pc(o.pct)} dos minutos possíveis, titular em ${o.tit} de ${o.desde}.</div>
+    ${fixar ? `<div class="c-acoes"><button class="btn${sel?"":" prim"}" id="c-cmp">${sel ? "Tirar da comparação" : "Adicionar à comparação"}</button><button class="btn" id="c-fechar">Fechar</button></div>` : ""}`;
+  c.classList.add("on");
+  cartaoFixo = fixar;
+  const r = ancora.getBoundingClientRect(), w = c.offsetWidth, h = c.offsetHeight;
+  let x = r.left, y = r.bottom + 8;
+  if (x + w > innerWidth - 12) x = innerWidth - w - 12;
+  if (y + h > innerHeight - 12) y = Math.max(12, r.top - h - 8);
+  c.style.left = Math.max(12, x) + "px"; c.style.top = y + "px";
+  if (fixar) {
+    $("#c-cmp").onclick = () => { alternar(a); fecharCartao(true); if (S.aba === "elenco") abaElenco(); else desenhar(); };
+    $("#c-fechar").onclick = () => fecharCartao(true);
+  }
+}
+function fecharCartao(forcar){ if (cartaoFixo && !forcar) return; cartaoFixo = false; $("#cartao").classList.remove("on"); }
+function alternar(a){
+  const i = S.cmp.indexOf(a);
+  if (i >= 0) S.cmp.splice(i,1); else { if (S.cmp.length >= 4) S.cmp.shift(); S.cmp.push(a); }
+}
+
+/* ---------------- Comparar ---------------- */
+function abaComparar(){
+  const rotulos = D.atletas.map((a,i) => [i, `${a[0]} (${D.times[a[1]]})`]);
+  $("#app").innerHTML = `
+    <div class="bloco"><h2>Comparar atletas</h2>
+      <input list="lista-atl" id="busca" placeholder="Digite o nome do atleta" style="max-width:420px">
+      <datalist id="lista-atl">${rotulos.map(([,r]) => `<option value="${esc(r)}">`).join("")}</datalist>
+      <div class="chips" id="chips"></div>
+      <p class="nota" style="margin-top:0">Até 4 atletas, de qualquer time. Também dá para adicionar pelo cartão do atleta na aba Elenco.</p>
+    </div><div id="cmp-corpo"></div>`;
+  $("#busca").addEventListener("change", e => {
+    const achado = rotulos.find(([,r]) => r === e.target.value);
+    if (achado && !S.cmp.includes(achado[0])) { alternar(achado[0]); e.target.value = ""; corpoComparar(); }
+  });
+  corpoComparar();
+}
+function corpoComparar(){
+  $("#chips").innerHTML = S.cmp.map((a,i) => `<span class="chip"><b style="background:${CORES[i]}"></b>${esc(D.atletas[a][0])}<button data-a="${a}" aria-label="Remover">×</button></span>`).join("");
+  $("#chips").onclick = e => { const b = e.target.closest("button"); if (b) { alternar(+b.dataset.a); corpoComparar(); } };
+  const alvo = $("#cmp-corpo");
+  if (grafico) { grafico.destroy(); grafico = null; }
+  if (!S.cmp.length) { alvo.innerHTML = '<p class="vazio">Adicione atletas pela busca acima.</p>'; return; }
+  const st = S.cmp.map(stats);
+  const linhas = [
+    ["Time", o => D.times[o.t], null], ["Posição", o => D.atletas[o.a][2], null],
+    ["Jogos do time desde a chegada", o => o.desde, null], ["Relacionado", o => o.rel, 1],
+    ["Não relacionado", o => o.nrel, -1], ["Titular", o => o.tit, 1], ["Entrou durante o jogo", o => o.ent, 0],
+    ["No banco, não entrou", o => o.banco, 0], ["Minutos", o => o.min, 1], ["% dos minutos possíveis", o => o.pct, 1],
+    ["Minutos por jogo jogado", o => o.mpj, 1], ["% de titularidade", o => o.ptit, 1]];
+  const corpo = linhas.map(([rot, f, dir]) => {
+    const vals = st.map(f), alvoV = dir ? (dir > 0 ? Math.max(...vals) : Math.min(...vals)) : null;
+    return `<tr><td>${rot}</td>${vals.map(v => `<td class="num${dir && st.length>1 && v===alvoV ? " melhor" : ""}">${
+      rot.startsWith("%") ? pc(v) : typeof v === "number" ? fmt(v) : esc(v)}</td>`).join("")}</tr>`;
+  }).join("");
+  alvo.innerHTML = `<div class="grade" style="margin-top:18px">
+    <div class="bloco"><h2>Números</h2><div class="rolar"><table><thead><tr><th class="esq">Indicador</th>${st.map((o,i) => `<th style="color:${CORES[i]}">${esc(D.atletas[o.a][0])}</th>`).join("")}</tr></thead><tbody>${corpo}</tbody></table></div></div>
+    <div class="bloco"><h2>Minutos acumulados na temporada</h2><canvas id="graf"></canvas></div></div>
+    <div class="bloco" style="margin-top:18px"><h2>Jogo a jogo</h2>${explicaFaixa}
+    ${st.map((o,i) => `<h3 style="color:${CORES[i]}">${esc(D.atletas[o.a][0])} (${esc(D.times[o.t])})</h3>${faixa(o)}`).join("")}</div>`;
+  const datas = [...new Set(st.flatMap(o => o.faixa.filter(f => f[0] !== "p").map(f => D.jogos[f[1]][1])))].sort();
+  const series = st.map((o,i) => {
+    let acc = 0; const porData = {};
+    o.faixa.forEach(([c,j,m]) => { if (c !== "p") { acc += m || 0; porData[D.jogos[j][1]] = acc; } });
+    return {label: D.atletas[o.a][0], data: datas.map(d => porData[d] ?? null), borderColor: CORES[i],
+            backgroundColor: CORES[i], spanGaps: true, pointRadius: 2, tension: 0, borderWidth: 2};
+  });
+  if (window.Chart) {
+    const cs = getComputedStyle(document.documentElement), cor = v => cs.getPropertyValue(v).trim();
+    grafico = new Chart($("#graf"), {type:"line", data:{labels: datas.map(dataBR), datasets: series},
+      options:{responsive:true, interaction:{mode:"index", intersect:false},
+        plugins:{legend:{labels:{color:cor("--tinta")}}},
+        scales:{x:{ticks:{color:cor("--suave"), maxTicksLimit:12}, grid:{display:false}},
+                y:{ticks:{color:cor("--suave")}, grid:{color:cor("--linha")}}}}});
+  }
+}
+
+/* ---------------- Posição entre times ---------------- */
+function abaPosicao(){
+  const g = S.grupoPos;
+  const linhas = D.times.map((nome,t) => {
+    const st = D.atlTime[t].filter(a => D.atletas[a][2] === g).map(stats).filter(o => o.jogou > 0 && o.jogou >= S.minJ && o.min >= S.minM).sort((a,b) => b.min - a.min);
+    if (!st.length) return null;
+    const tot = st.reduce((s,o) => s + o.min, 0);
+    return {t, nome, n: st.length, l: st[0], s: st[1], conc: tot ? 100 * st[0].min / tot : 0};
+  }).filter(Boolean).sort((a,b) => b.conc - a.conc);
+  const meu = D.atlTime[S.time].map(stats).filter(o => o.rel > 0);
+  const resumoMeu = ORD.map(gr => {
+    const st = meu.filter(o => D.atletas[o.a][2] === gr && o.jogou > 0).sort((a,b) => b.min - a.min);
+    if (!st.length) return "";
+    const tot = st.reduce((s,o) => s + o.min, 0), res = tot - st[0].min;
+    return `<tr><td>${NOME_GRUPO[gr]}</td><td class="esq"><button class="nome" data-a="${st[0].a}">${esc(D.atletas[st[0].a][0])}</button></td><td class="num">${pc(st[0].pct)}</td>
+      <td class="num">${pc(st[0].ptit)}</td><td class="num">${st.length - 1}</td><td class="num">${fmt(res)}</td><td class="num">${pc(tot ? 100*res/tot : 0)}</td></tr>`;
+  }).join("");
+  $("#app").innerHTML = `
+    <div class="bloco"><h2>${esc(D.times[S.time])}: quem mais joga em cada posição contra os reservas</h2>
+      <div class="rolar"><table><thead><tr><th class="esq">Posição</th><th class="esq">Quem mais jogou</th><th>% dos min. possíveis</th><th>% titular</th><th>Reservas usados</th><th>Minutos dos reservas</th><th>% da posição com reservas</th></tr></thead><tbody>${resumoMeu}</tbody></table></div>
+      <p class="nota">Quanto maior a última coluna, mais o treinador roda a posição.</p></div>
+    <div class="bloco" style="margin-top:18px"><h2>Comparação entre times</h2>
+      <label style="font-size:13px;color:var(--suave);display:block;max-width:240px">Posição <select id="f-gpos">${ORD.map(x => `<option value="${x}"${x===g?" selected":""}>${NOME_GRUPO[x]}</option>`).join("")}</select></label>
+      <div class="rolar" style="margin-top:12px"><table><thead><tr><th class="esq">Time</th><th class="esq">Quem mais jogou</th><th>% dos min. possíveis</th><th>% titular</th><th class="esq">Segundo</th><th>% dos min. possíveis</th><th>Atletas usados</th><th>Concentração</th></tr></thead>
+      <tbody>${linhas.map(r => `<tr class="${r.t===S.time?"dest":""}"><td>${esc(r.nome)}</td><td class="esq"><button class="nome" data-a="${r.l.a}">${esc(D.atletas[r.l.a][0])}</button></td><td class="num">${pc(r.l.pct)}</td><td class="num">${pc(r.l.ptit)}</td>
+        <td class="esq">${r.s ? `<button class="nome" data-a="${r.s.a}">${esc(D.atletas[r.s.a][0])}</button>` : "—"}</td><td class="num">${r.s ? pc(r.s.pct) : "—"}</td><td class="num">${r.n}</td><td class="num">${pc(r.conc)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="nota">Concentração é a fatia dos minutos da posição que ficou com quem mais jogou. Nos outros times, as posições vêm da sugestão do ESPN e só ficam certas onde alguém corrigir pelo modo de edição.</p></div>`;
+  $("#f-gpos").addEventListener("input", e => { S.grupoPos = e.target.value; abaPosicao(); });
+}
+
+/* ---------------- Último jogo ---------------- */
+function abaUltimo(){
+  const jogos = jogosDoTime(S.time);
+  if (!jogos.length) { $("#app").innerHTML = '<p class="vazio">Nenhum jogo no período selecionado.</p>'; return; }
+  const j = jogos[jogos.length - 1], g = D.jogos[j], casa = g[2] === S.time;
+  const st = new Map(D.atlTime[S.time].map(a => [a, stats(a)]));
+  const no = [[],[],[]], fora = [];
+  for (const a of D.atlTime[S.time]) {
+    const r = D.part[a].get(j);
+    if (r) no[r[2]].push([a, S.met === "90" ? r[3] : (r[4] ?? r[3])]);
+    else if (st.get(a).rel > 0) fora.push([a, null]);
+  }
+  const ordem = l => l.sort((x,y) => ORD.indexOf(D.atletas[x[0]][2]) - ORD.indexOf(D.atletas[y[0]][2]) || (y[1]||0) - (x[1]||0));
+  const lista = (l, mostraMin) => `<ul class="lista">${ordem(l).map(([a,m]) => `<li><span><span class="pos">${D.atletas[a][2]}</span> <button class="nome" data-a="${a}">${esc(D.atletas[a][0])}</button></span><span>${mostraMin ? m + " min; " : ""}${pc(st.get(a).pct)} na temporada</span></li>`).join("") || "<li><span>Ninguém</span></li>"}</ul>`;
+  $("#app").innerHTML = `<div class="bloco"><h2>Último jogo no período</h2>
+      <div class="placar">${esc(D.times[g[2]])} ${g[4] ?? ""} x ${g[5] ?? ""} ${esc(D.times[g[3]])}</div>
+      <p class="nota">${dataLonga(g[1])}, ${casa ? "em casa" : "fora"}, ${D.competicoes[g[0]]}${g[6] ? ", " + g[6] + " minutos de jogo com acréscimos" : ""}</p></div>
+    <div class="grade" style="margin-top:18px">
+      <div class="bloco"><h2>Titulares</h2>${lista(no[0], true)}</div>
+      <div class="bloco"><h2>Entraram</h2>${lista(no[1], true)}<h3>No banco, não entraram</h3>${lista(no[2], false)}</div>
+      <div class="bloco"><h2>Não relacionados</h2>${lista(fora, false)}<p class="nota">Atletas que já foram relacionados na temporada e ficaram fora deste jogo.</p></div>
+    </div>`;
+}
+
+/* ---------------- edição de posições no GitHub ---------------- */
+function repoInfo(){
+  const dono = location.hostname.endsWith("github.io") ? location.hostname.split(".")[0] : (le("gh_dono") || "brunoputi");
+  const repo = location.pathname.split("/").filter(Boolean)[0] || "minutagem";
+  return {dono, repo, api: `https://api.github.com/repos/${dono}/${repo}`};
+}
+function abrirDialogo(msg){ $("#dlg-erro").textContent = msg || ""; $("#dlg-token").value = ""; $("#dlg").showModal(); }
+async function conectar(){
+  const tk = $("#dlg-token").value.trim();
+  if (!tk) { $("#dlg-erro").textContent = "Cole a chave de acesso."; return; }
+  $("#dlg-ok").disabled = true; $("#dlg-erro").textContent = "Verificando…";
+  try {
+    const r = await fetch(repoInfo().api, {headers:{Authorization:`Bearer ${tk}`, Accept:"application/vnd.github+json"}});
+    const j = await r.json();
+    if (!r.ok) throw new Error("A chave não tem acesso a este repositório.");
+    if (j.permissions && !j.permissions.push) throw new Error("A chave só tem leitura. Dê Read and write em Contents.");
+    guarda("gh_token", tk); $("#dlg").close(); S.editando = true; atualizarEdicao(); desenhar();
+  } catch(e) { $("#dlg-erro").textContent = e.message || "Não foi possível verificar a chave."; }
+  $("#dlg-ok").disabled = false;
+}
+function atualizarEdicao(){
+  const n = pendentes.size;
+  $("#barra-ed").classList.toggle("on", n > 0);
+  $("#ed-txt").textContent = n === 1 ? "1 posição alterada, ainda não salva" : `${n} posições alteradas, ainda não salvas`;
+}
+const b64ParaTexto = b => new TextDecoder("utf-8",{ignoreBOM:true}).decode(Uint8Array.from(atob(b.replace(/\s/g,"")), c => c.charCodeAt(0)));
+function textoParaB64(t){
+  const bytes = new TextEncoder().encode(t); let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+async function salvarGithub(){
+  const tk = le("gh_token"); if (!tk) { abrirDialogo(); return; }
+  const {api} = repoInfo(), h = {Authorization:`Bearer ${tk}`, Accept:"application/vnd.github+json"};
+  const mud = new Map([...pendentes].map(([a,g]) => [D.times[D.atletas[a][1]] + "|" + D.atletas[a][4], [a, g === "—" ? "" : g]]));
+  const btn = $("#ed-salvar"); btn.disabled = true; $("#ed-txt").textContent = "Salvando…";
+  try {
+    for (let tentativa = 0; tentativa < 3; tentativa++) {
+      const r = await fetch(`${api}/contents/posicoes.csv?ref=main&t=${Date.now()}`, {headers:h, cache:"no-store"});
+      if (r.status === 401) { guarda("gh_token", null); throw new Error("chave"); }
+      if (!r.ok) throw new Error("Não consegui ler o posicoes.csv (" + r.status + ").");
+      const j = await r.json();
+      let txt = b64ParaTexto(j.content);
+      const bom = txt.charCodeAt(0) === 0xFEFF; if (bom) txt = txt.slice(1);
+      const linhas = txt.split(/\r?\n/), cab = linhas[0].split(";");
+      const iT = cab.indexOf("time"), iA = cab.indexOf("atleta_id"), iM = cab.indexOf("grupo_manual");
+      const feitos = new Set();
+      for (let i = 1; i < linhas.length; i++) {
+        if (!linhas[i]) continue;
+        const c = linhas[i].split(";"), chave = c[iT] + "|" + c[iA];
+        if (mud.has(chave)) { while (c.length <= iM) c.push(""); c[iM] = mud.get(chave)[1]; linhas[i] = c.join(";"); feitos.add(chave); }
+      }
+      while (linhas.length && linhas[linhas.length-1] === "") linhas.pop();
+      for (const [chave, [a, g]] of mud) if (!feitos.has(chave)) {
+        const at = D.atletas[a]; linhas.push([D.times[at[1]], at[4], at[0], at[3], "", g].join(";"));
+      }
+      const novo = (bom ? "\uFEFF" : "") + linhas.join("\r\n") + "\r\n";
+      const put = await fetch(`${api}/contents/posicoes.csv`, {method:"PUT", headers:h, body: JSON.stringify({
+        message: `Posições ajustadas pelo painel (${mud.size})`, content: textoParaB64(novo), sha: j.sha, branch: "main"})});
+      if (put.ok) {
+        fetch(`${api}/actions/workflows/atualizar.yml/dispatches`, {method:"POST", headers:h, body: JSON.stringify({ref:"main"})}).catch(() => {});
+        for (const [a, g] of pendentes) D.grupoOriginal[a] = g;
+        pendentes.clear();
+        $("#barra-ed").classList.add("on");
+        $("#ed-txt").textContent = "Salvo. O painel se atualiza para todos em cerca de 3 minutos.";
+        setTimeout(atualizarEdicao, 6000);
+        desenhar(); btn.disabled = false; return;
+      }
+      if (put.status !== 409 && put.status !== 422) throw new Error("O GitHub recusou a gravação (" + put.status + "). Confira se a chave tem Read and write em Contents.");
+    }
+    throw new Error("Outra atualização estava em andamento. Tente salvar de novo em 1 minuto.");
+  } catch(e) {
+    if (e.message === "chave") abrirDialogo("A chave expirou ou foi revogada. Gere uma nova.");
+    else $("#ed-txt").textContent = e.message;
+  }
+  btn.disabled = false;
+}
+
+/* ================= LESÕES (dados ficam só neste navegador) ================= */
+const E = {linhas:null, nomes:[], arquivo:"", carregado:"", f:{cat:"Profissional", ano:"all", tipo:"all", evento:"all", busca:""}, ord:{k:"d", d:-1}};
+const SEV = [["Mínima (1 a 3 dias)",1,3],["Leve (4 a 7 dias)",4,7],["Moderada (8 a 28 dias)",8,28],["Grave (mais de 28 dias)",29,1e9]];
+const COR_TIPO = {"Muscular":"#3D5A80","Articular":"#7FA7C9","Óssea":"#B5736A","Tendínea":"#8A7AB8","Nervosa":"#5E8C61","Outros":"#A0A8B0"};
+const PAL = ["#3D5A80","#7FA7C9","#B5736A","#8A7AB8","#5E8C61","#C9A227","#A0A8B0","#5C6B7A","#D49A8C","#9DB5CF"];
+const MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+let graficosLes = [];
+const normTxt = s => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+const hojeISO = () => new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+const difDias = (a,b) => Math.round((new Date(b+"T12:00:00") - new Date(a+"T12:00:00")) / 864e5);
+const fmt1 = n => n == null || !isFinite(n) ? "—" : n.toFixed(1).replace(".", ",");
+
+function carregarLesoesSalvas(){
+  try { const s = localStorage.getItem("epid_v1"); if (s) Object.assign(E, JSON.parse(s)); } catch(e){}
+}
+async function garantirXLSX(){
+  if (window.XLSX) return;
+  await new Promise((ok, er) => { const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; s.onload = ok;
+    s.onerror = () => er(new Error("Não consegui carregar o leitor de Excel. Confira a internet e tente de novo."));
+    document.head.appendChild(s); });
+}
+function serialISO(v){
+  if (v == null || v === "") return "";
+  if (typeof v === "number" && v > 1000) return new Date(Date.UTC(1899,11,30) + Math.round(v)*864e5).toISOString().slice(0,10);
+  const s = String(v), m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;
+  const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m2 ? m2[0] : "";
+}
+const capit = s => { s = String(s ?? "").trim(); if (!s) return ""; s = s.toLowerCase(); return s[0].toUpperCase() + s.slice(1); };
+function normTipo(t){ const x = capit(t); if (!x) return "Não informado"; if (/^tend/i.test(x)) return "Tendínea"; return x; }
+function grupoEvento(ev){
+  const e = normTxt(ev);
+  if (e.startsWith("jogo oficial")) return "Jogo oficial";
+  if (e.startsWith("treinamento") || e === "academia") return "Treino";
+  if (e.startsWith("amistoso")) return "Amistoso";
+  return ev ? "Outros" : "Não informado";
+}
+function severidade(l){ if (l.aberto) return "Em tratamento"; const s = SEV.find(([,a,b]) => l.dias >= a && l.dias <= b); return s ? s[0] : "Sem dias registrados"; }
+
+async function lerPlanilha(arq){
+  await garantirXLSX();
+  const wb = XLSX.read(await arq.arrayBuffer(), {type:"array"});
+  const nomeAba = wb.SheetNames.find(n => normTxt(n) === "tab epid") || wb.SheetNames[0];
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[nomeAba], {header:1, raw:true, defval:null});
+  const cab = (rows[0] || []).map(h => normTxt(h));
+  const col = nome => cab.indexOf(normTxt(nome));
+  const C = {d:col("Data de Entrada"), n:col("Nome"), c:col("Categoria"), nasc:col("Data de Nasc."), dom:col("Domin."), pos:col("Posição"),
+    diag:col("Diagnóstico / Queixas"), tipo:col("Tipo"), cl:col("Classif."), reg:col("Região"), mem:col("Membro"), cont:col("Contato"),
+    mec:col("Mecanismo"), ev:col("Evento"), rec:col("Reicidente"), rtp:col("RTP"), ddm:col("Dias DM"), fim:col("Total"),
+    dv:col("Dias Vetado"), trat:col("Tratamento"), st:col("Liberado ou Vetado"), oc:col("Ocultar")};
+  if (C.d < 0 || C.n < 0) throw new Error("Não encontrei as colunas “Data de Entrada” e “Nome” na aba Tab Epid.");
+  const hoje = hojeISO(), linhas = [];
+  for (const r of rows.slice(1)) {
+    const d = serialISO(r[C.d]), n = String(r[C.n] ?? "").trim();
+    if (!d || !n) continue;
+    if (C.oc >= 0 && +r[C.oc] === 1) continue;
+    const fim = serialISO(r[C.fim]), dv = Number(r[C.dv]);
+    let dias = isFinite(dv) && dv > 0 ? dv : (fim ? difDias(d, fim) : null);
+    const st = String(r[C.st] ?? "").trim().toUpperCase();
+    const aberto = !fim && !(isFinite(dv) && dv > 0);
+    if (aberto) dias = Math.max(0, difDias(d, hoje));
+    linhas.push({d, n, c: String(r[C.c] ?? "Não informado").trim() || "Não informado", nasc: serialISO(r[C.nasc]),
+      pos: capit(r[C.pos]), diag: String(r[C.diag] ?? "").trim(), tipo: normTipo(r[C.tipo]), cl: String(r[C.cl] ?? "").trim(),
+      reg: String(r[C.reg] ?? "").trim() || "Não informado", mem: String(r[C.mem] ?? "").trim().toUpperCase(),
+      cont: String(r[C.cont] ?? "").trim() || "Não informado", mec: String(r[C.mec] ?? "").trim() || "Não informado",
+      ev: String(r[C.ev] ?? "").trim(), rec: normTxt(r[C.rec]) === "sim", rtp: serialISO(r[C.rtp]),
+      ddm: isFinite(Number(r[C.ddm])) ? Number(r[C.ddm]) : null, fim, dias, aberto, st, trat: String(r[C.trat] ?? "").trim()});
+  }
+  const abaNomes = wb.SheetNames.find(n => normTxt(n) === "nomes gerais");
+  let nomes = [];
+  if (abaNomes) nomes = XLSX.utils.sheet_to_json(wb.Sheets[abaNomes], {header:1, raw:true, defval:null}).slice(1)
+    .filter(r => r[0]).map(r => [String(r[0]).trim(), serialISO(r[1]), String(r[2] ?? "").trim()]);
+  Object.assign(E, {linhas, nomes, arquivo: arq.name, carregado: new Date().toISOString()});
+  try { localStorage.setItem("epid_v1", JSON.stringify({linhas, nomes, arquivo: arq.name, carregado: E.carregado})); } catch(e){}
+}
+
+/* casamento de nomes curtos (ESPN) com nomes completos (planilha) */
+function casarNomes(curto, lista){
+  const t = normTxt(curto).split(" ").filter(x => x.length > 1);
+  if (!t.length) return [];
+  const exato = lista.filter(n => normTxt(n) === normTxt(curto));
+  const c = lista.filter(nome => { const ts = normTxt(nome).split(" "); return t.every(x => ts.includes(x)); });
+  return c.length ? c : exato;
+}
+function casarNome(curto, lista){ const c = casarNomes(curto, lista); return c.length === 1 ? c[0] : null; }
+function dadosClube(a){
+  if (!E.linhas || !/athletico/i.test(D.times[D.atletas[a][1]])) return null;
+  const nome = D.atletas[a][0];
+  const cad = (() => { const n = casarNome(nome, E.nomes.map(x => x[0])); return n ? E.nomes.find(x => x[0] === n) : null; })();
+  const nomesLes = [...new Set(E.linhas.filter(l => l.c === "Profissional").map(l => l.n))];
+  const cand = casarNomes(nome, nomesLes);
+  const nLes = cand.length && cand.length <= 2 ? cand : (cad && nomesLes.includes(cad[0]) ? [cad[0]] : []);
+  const les = E.linhas.filter(l => nLes.includes(l.n) && l.d.startsWith(String(D.temporada)));
+  return {foto: cad?.[2] || "", nasc: cad?.[1] || "", les};
+}
+
+/* exposição */
+function chaveExp(cat, ano){ return `${cat}|${ano}`; }
+function lerExp(){ try { return JSON.parse(localStorage.getItem("epid_exp") || "{}"); } catch(e) { return {}; } }
+function gravarExp(o){ try { localStorage.setItem("epid_exp", JSON.stringify(o)); } catch(e){} }
+function horasJogoESPN(){
+  const cap = D.times.findIndex(t => /athletico/i.test(t)); if (cap < 0) return {h:0, j:0};
+  let min = 0; const jogos = new Set();
+  for (const a of D.atlTime[cap]) for (const [j, r] of D.part[a]) { min += (r[4] ?? r[3]); jogos.add(j); }
+  return {h: min / 60, j: jogos.size};
+}
+function expPadrao(cat, ano){
+  const atual = +ano === new Date().getFullYear();
+  const semanas = atual ? Math.min(44, Math.max(1, Math.round((Date.now() - new Date(ano, 0, 15)) / 6048e5))) : 44;
+  return {atletas: cat === "Profissional" ? 30 : 28, horas: 7.5, semanas, jogos: 0};
+}
+function exposicao(linhasCat){
+  if (E.f.cat === "all") return null;
+  const anos = E.f.ano === "all" ? [...new Set(linhasCat.map(l => l.d.slice(0,4)))].sort() : [E.f.ano];
+  const salvo = lerExp(); let treino = 0, jogo = 0; const det = [];
+  for (const ano of anos) {
+    const e = {...expPadrao(E.f.cat, ano), ...(salvo[chaveExp(E.f.cat, ano)] || {})};
+    const t = e.atletas * e.horas * e.semanas;
+    let jh = e.jogos * 11 * 1.5, origem = "";
+    if (E.f.cat === "Profissional" && +ano === D.temporada) { const x = horasJogoESPN(); jh += x.h; origem = `${x.j} jogos com minutagem real do ESPN + ${e.jogos} jogos informados`; }
+    treino += t; jogo += jh; det.push({ano, e, t, jh, origem});
+  }
+  return {treino, jogo, total: treino + jogo, det, faltaJogos: det.some(x => x.jh === 0)};
+}
+
+/* filtros */
+function lesFiltro(ignorarAno){
+  const b = normTxt(E.f.busca);
+  return E.linhas.filter(l => (E.f.cat === "all" || l.c === E.f.cat)
+    && (ignorarAno || E.f.ano === "all" || l.d.startsWith(E.f.ano))
+    && (E.f.tipo === "all" || l.tipo === E.f.tipo)
+    && (E.f.evento === "all" || grupoEvento(l.ev) === E.f.evento)
+    && (!b || normTxt(l.n).includes(b) || normTxt(l.diag).includes(b)));
+}
+const contar = (arr, f) => { const m = new Map(); arr.forEach(x => { const k = f(x); m.set(k, (m.get(k) || 0) + 1); }); return [...m].sort((a,b) => b[1] - a[1]); };
+const mediana = v => { if (!v.length) return null; const s = [...v].sort((a,b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m-1] + s[m]) / 2; };
+
+function indicadores(L, exp){
+  const fechadas = L.filter(l => !l.aberto && l.dias != null);
+  const jogoL = L.filter(l => grupoEvento(l.ev) === "Jogo oficial"), treinoL = L.filter(l => grupoEvento(l.ev) === "Treino");
+  const diasCtx = [...jogoL, ...treinoL].reduce((s,l) => s + (l.dias || 0), 0);
+  const por1000 = (n, h) => h > 0 ? 1000 * n / h : null;
+  return {n: L.length, atletas: new Set(L.map(l => l.n)).size, dias: L.reduce((s,l) => s + (l.dias || 0), 0),
+    med: mediana(fechadas.map(l => l.dias)), media: fechadas.length ? fechadas.reduce((s,l) => s + l.dias, 0) / fechadas.length : null,
+    rec: L.length ? 100 * L.filter(l => l.rec).length / L.length : 0, abertas: L.filter(l => l.aberto).length,
+    inc: exp && !exp.faltaJogos ? por1000(jogoL.length + treinoL.length, exp.total) : null,
+    incJ: exp && !exp.faltaJogos ? por1000(jogoL.length, exp.jogo) : null,
+    incT: exp ? por1000(treinoL.length, exp.treino) : null, carga: exp && !exp.faltaJogos ? por1000(diasCtx, exp.total) : null,
+    nJ: jogoL.length, nT: treinoL.length};
+}
+
+/* ---------- aba ---------- */
+function abaLesoes(){
+  graficosLes.forEach(g => g.destroy()); graficosLes = [];
+  if (!E.linhas) {
+    $("#app").innerHTML = `<div class="carregar bloco"><h2>Estudo epidemiológico de lesões</h2>
+      <p>Selecione a planilha de controle (TABELA_EPIDEMIOLOGICA.xlsx). A leitura acontece só neste computador: os dados de lesão não são enviados para o GitHub nem para nenhum servidor.</p>
+      <input type="file" id="les-arq" accept=".xlsx,.xls" hidden><button class="btn prim" id="les-btn">Carregar planilha</button>
+      <p class="erro" id="les-erro"></p></div>`;
+    $("#les-btn").onclick = () => $("#les-arq").click();
+    $("#les-arq").onchange = async e => { const f = e.target.files[0]; if (!f) return;
+      $("#les-erro").textContent = "Lendo a planilha…";
+      try { await lerPlanilha(f); abaLesoes(); } catch(er) { $("#les-erro").textContent = er.message; } };
+    return;
+  }
+  const cats = contar(E.linhas, l => l.c).map(x => x[0]);
+  const anos = [...new Set(E.linhas.map(l => l.d.slice(0,4)))].sort();
+  if (E.f.cat !== "all" && !cats.includes(E.f.cat)) E.f.cat = cats[0];
+  const L = lesFiltro(false), Lcat = lesFiltro(true), exp = exposicao(Lcat.filter(l => E.f.ano === "all" || l.d.startsWith(E.f.ano)));
+  const I = indicadores(L, exp);
+  const op = (v,t,s) => `<option value="${esc(v)}"${s?" selected":""}>${esc(t)}</option>`;
+  const quando = new Date(E.carregado);
+  const tiposU = [...new Set(E.linhas.map(l => l.tipo))].sort(), regU = [...new Set(E.linhas.map(l => l.reg))].filter(r => r !== "Não informado").sort();
+  const semReg = regU.filter(r => !L.some(l => l.reg === r)), semTipo = tiposU.filter(t => t !== "Não informado" && !L.some(l => l.tipo === t));
+  const problemas = qualidade(L);
+  $("#app").innerHTML = `
+    <div class="explica" style="justify-content:space-between">
+      <span>Planilha <strong>${esc(E.arquivo)}</strong>, carregada em ${quando.toLocaleDateString("pt-BR")} às ${quando.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}, ${E.linhas.length} registros. Os dados ficam só neste navegador.</span>
+      <span style="gap:8px"><input type="file" id="les-arq" accept=".xlsx,.xls" hidden>
+        <button class="btn" id="les-btn">Carregar versão nova</button><button class="btn" id="les-csv">Exportar tabela (CSV)</button><button class="btn prim" id="les-pdf">Exportar relatório (PDF)</button></span></div>
+    <div class="les-filtros">
+      <label>Categoria<select id="lf-cat">${op("all","Todas")}${cats.map(c => op(c,c,c===E.f.cat)).join("")}</select></label>
+      <label>Ano<select id="lf-ano">${op("all","Todos")}${anos.map(a => op(a,a,a===E.f.ano)).join("")}</select></label>
+      <label>Tipo<select id="lf-tipo">${op("all","Todos")}${tiposU.map(t => op(t,t,t===E.f.tipo)).join("")}</select></label>
+      <label>Contexto<select id="lf-ev">${op("all","Todos")}${["Jogo oficial","Treino","Amistoso","Outros"].map(t => op(t,t,t===E.f.evento)).join("")}</select></label>
+      <label>Buscar atleta ou diagnóstico<input id="lf-busca" value="${esc(E.f.busca)}" placeholder="Ex.: isquiotibiais"></label>
+    </div>
+    <div class="kpis">
+      ${kpi(fmt(I.n), "lesões", `${I.atletas} atletas diferentes`)}
+      ${kpi(fmt1(I.inc), "lesões por 1.000 h", !exp ? "escolha uma categoria" : exp.faltaJogos ? "informe os jogos na exposição, abaixo" : `jogo + treino, ${fmt(exp.total)} h de exposição`, true)}
+      ${kpi(fmt1(I.incJ), "por 1.000 h em jogo", `${I.nJ} lesões em jogo oficial`)}
+      ${kpi(fmt1(I.incT), "por 1.000 h em treino", `${I.nT} lesões em treino`)}
+      ${kpi(fmt(I.dias), "dias perdidos", I.abertas ? `inclui ${I.abertas} em tratamento` : "todas encerradas")}
+      ${kpi(fmt1(I.carga), "dias perdidos por 1.000 h", "carga de lesão (burden)")}
+      ${kpi(I.med == null ? "—" : fmt(I.med), "dias de afastamento (mediana)", I.media == null ? "" : `média de ${fmt1(I.media)} dias`)}
+      ${kpi(pc(I.rec), "recidivas", `${L.filter(l => l.rec).length} lesões repetidas`)}
+    </div>
+    ${expHTML(exp)}
+    ${problemas.length ? `<div class="aviso"><strong>Atenção à planilha:</strong> ${problemas.join(" ")}</div>` : ""}
+    ${L.length ? `
+    <h2 class="secao">Quando acontecem</h2>
+    <div class="grade"><div class="bloco"><h2>Lesões por mês</h2><canvas id="g-mes"></canvas></div>
+      <div class="bloco"><h2>Comparação entre anos</h2><canvas id="g-ano"></canvas><p class="nota">Considera a categoria e os filtros de tipo e contexto, em todos os anos.</p></div></div>
+    <h2 class="secao">O que acontece</h2>
+    <div class="grade"><div class="bloco"><h2>Por tipo</h2><canvas id="g-tipo"></canvas></div>
+      <div class="bloco"><h2>Por gravidade (dias de afastamento)</h2><canvas id="g-sev"></canvas></div>
+      <div class="bloco"><h2>Por região do corpo</h2><canvas id="g-reg"></canvas>
+        <h3>Regiões sem nenhuma lesão no filtro</h3><div class="tags">${semReg.map(r => `<span class="tag">${esc(r)}</span>`).join("") || '<span class="nota">Todas as regiões tiveram ao menos uma lesão.</span>'}</div>
+        ${semTipo.length ? `<h3>Tipos sem registro</h3><div class="tags">${semTipo.map(r => `<span class="tag">${esc(r)}</span>`).join("")}</div>` : ""}</div>
+      <div class="bloco"><h2>Lesões musculares por classificação</h2><canvas id="g-cl"></canvas><p class="nota">Classificação registrada na planilha (ex.: 1A, 2B, 3A). Lesões sem classificação ficam de fora.</p></div></div>
+    <h2 class="secao">Como acontecem</h2>
+    <div class="grade"><div class="bloco"><h2>Mecanismo</h2><canvas id="g-mec"></canvas></div>
+      <div class="bloco"><h2>Contato</h2><canvas id="g-cont"></canvas></div>
+      <div class="bloco"><h2>Contexto</h2><canvas id="g-ev"></canvas></div></div>
+    <h2 class="secao">Diagnósticos mais frequentes</h2>
+    <div class="rolar"><table><thead><tr><th class="esq">Diagnóstico</th><th>Casos</th><th>Dias perdidos</th><th>Mediana de dias</th><th>Último caso</th></tr></thead><tbody>${diagnosticos(L).slice(0,12).map(x =>
+      `<tr><td>${esc(x.diag)}</td><td class="num">${x.n}</td><td class="num">${fmt(x.dias)}</td><td class="num">${x.med == null ? "—" : fmt(x.med)}</td><td class="num">${dataLonga(x.ult)}</td></tr>`).join("")}</tbody></table></div>
+    <h2 class="secao">Atletas</h2>
+    <div class="rolar"><table><thead><tr><th class="esq">Atleta</th><th>Lesões</th><th>Dias perdidos</th><th class="esq">Última lesão</th><th class="esq">Situação</th></tr></thead><tbody>${porAtleta(L).map(x =>
+      `<tr><td>${esc(x.n)}</td><td class="num">${x.qt}</td><td class="num">${fmt(x.dias)}</td><td class="esq">${dataLonga(x.ult.d)}: ${esc(x.ult.diag)}</td><td class="esq">${x.aberta ? `Em tratamento desde ${dataLonga(x.aberta.d)}` : "Liberado"}</td></tr>`).join("")}</tbody></table></div>
+    <h2 class="secao">Todas as lesões do filtro</h2>
+    <div class="rolar"><table id="t-les"><thead><tr>${COLS_LES.map(([k,t]) => `<th data-k="${k}" class="${["n","diag","tipo","reg","ev","st"].includes(k)?"esq":""}"${E.ord.k===k?" data-ativo":""}>${t}</th>`).join("")}</tr></thead>
+      <tbody>${ordenarLes(L).map(l => `<tr><td class="num">${dataLonga(l.d)}</td><td class="esq">${esc(l.n)}</td><td class="esq">${esc(l.diag)}</td><td class="esq">${esc(l.tipo)}</td><td class="esq">${esc(l.reg)}</td><td class="esq">${esc(l.ev || "—")}</td><td class="num">${l.dias ?? "—"}</td><td class="esq">${l.aberto ? "Em tratamento" : l.fim ? dataLonga(l.fim) : "—"}</td><td class="esq">${l.rec ? "Sim" : "Não"}</td></tr>`).join("")}</tbody></table></div>
+    <p class="nota">Gravidade pelo consenso de Fuller et al. (2006), a partir dos dias até a liberação total. Incidência = lesões ÷ horas de exposição × 1.000, contando só lesões em jogo oficial e em treino. Lesões ainda em tratamento entram com os dias até hoje.</p>
+    ` : '<p class="vazio">Nenhuma lesão com esses filtros.</p>'}`;
+  ligarLesoes(L, exp);
+  if (L.length) desenharGraficosLes(L, Lcat, getComputedStyle(document.documentElement), false);
+}
+const kpi = (v, rot, sub, forte) => `<div class="kpi${forte?" forte":""}"><b>${v}</b><span>${rot}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
+const COLS_LES = [["d","Data"],["n","Atleta"],["diag","Diagnóstico"],["tipo","Tipo"],["reg","Região"],["ev","Contexto"],["dias","Dias"],["fim","Liberação"],["rec","Recidiva"]];
+function ordenarLes(L){
+  const {k,d} = E.ord;
+  return [...L].sort((a,b) => { const x = a[k] ?? "", y = b[k] ?? "";
+    const r = typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y)); return d === -1 ? -r : r; });
+}
+function diagnosticos(L){
+  const m = new Map();
+  for (const l of L) { const k = normTxt(l.diag).replace(/\b(de|do|da|dos|das|no|na)\b/g, "").replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim(); if (!k) continue;
+    const o = m.get(k) || {diag: l.diag, n:0, dias:0, lst:[], ult:""}; o.n++; o.dias += l.dias || 0; if (!l.aberto && l.dias != null) o.lst.push(l.dias); if (l.d > o.ult) o.ult = l.d; m.set(k, o); }
+  return [...m.values()].map(o => ({...o, med: mediana(o.lst)})).sort((a,b) => b.n - a.n || b.dias - a.dias);
+}
+function porAtleta(L){
+  const m = new Map();
+  for (const l of L) { const o = m.get(l.n) || {n:l.n, qt:0, dias:0, ult:l, aberta:null}; o.qt++; o.dias += l.dias || 0;
+    if (l.d >= o.ult.d) o.ult = l; if (l.aberto) o.aberta = l; m.set(l.n, o); }
+  return [...m.values()].sort((a,b) => b.dias - a.dias);
+}
+function qualidade(L){
+  const p = [];
+  const semTipo = L.filter(l => l.tipo === "Não informado").length; if (semTipo) p.push(`${semTipo} lesões sem tipo.`);
+  const semEv = L.filter(l => !l.ev).length; if (semEv) p.push(`${semEv} sem contexto (jogo ou treino), fora do cálculo de incidência.`);
+  const inc = L.filter(l => l.ddm != null && l.dias != null && !l.aberto && l.ddm > l.dias).length;
+  if (inc) p.push(`${inc} com mais dias no DM do que dias até a liberação total; confira as datas.`);
+  const nomes = [...new Set(L.map(l => l.n))], dup = [];
+  for (const a of nomes) for (const b of nomes) if (a !== b && normTxt(a).split(" ").length >= 2 && normTxt(a).split(" ").length < normTxt(b).split(" ").length
+    && normTxt(a).split(" ").every(x => normTxt(b).split(" ").includes(x))) dup.push(`“${a}” e “${b}”`);
+  if (dup.length) p.push(`Possíveis grafias diferentes do mesmo atleta (${dup.length}): ${dup.slice(0,4).join("; ")}${dup.length > 4 ? "…" : ""}. Unifique na planilha para não contar como atletas diferentes.`);
+  const antigas = L.filter(l => l.aberto && difDias(l.d, hojeISO()) > 120).length;
+  if (antigas) p.push(`${antigas} sem data de liberação há mais de 120 dias; se já foram liberadas, preencha a liberação.`);
+  return p;
+}
+function expHTML(exp){
+  if (!exp) return `<div class="aviso">Para calcular lesões por 1.000 horas, escolha uma categoria.</div>`;
+  return `<details class="bloco" style="margin-bottom:18px"${exp.faltaJogos ? " open" : ""}><summary>Exposição usada no cálculo: ${fmt(exp.treino)} h de treino e ${fmt(exp.jogo)} h de jogo (clique para ajustar)</summary>
+    ${exp.faltaJogos ? '<p class="aviso" style="margin-top:12px">Falta informar o número de jogos oficiais em pelo menos um ano. Sem isso, a incidência em jogo e a total ficariam erradas, então não são mostradas.</p>' : ""}
+    <p class="nota">Treino = atletas × horas de treino por semana × semanas. Jogo = jogos × 11 atletas × 1,5 h, método padrão quando não há exposição individual. ${E.f.cat === "Profissional" ? `Para o Profissional em ${D.temporada}, os jogos do Brasileirão usam a minutagem real do ESPN; informe abaixo só os jogos de outras competições (estadual, copas, continentais).` : ""} Os valores ficam salvos neste navegador.</p>
+    ${exp.det.map(x => `<div class="exp-grade" data-ano="${x.ano}"><strong style="grid-column:1/-1;font:600 16px var(--cond)">${x.ano}${x.origem ? `: ${x.origem}` : ""}</strong>
+      <label>Atletas no grupo<input type="number" min="1" data-k="atletas" value="${x.e.atletas}"></label>
+      <label>Horas de treino por semana<input type="number" min="0" step="0.5" data-k="horas" value="${x.e.horas}"></label>
+      <label>Semanas de temporada<input type="number" min="1" data-k="semanas" value="${x.e.semanas}"></label>
+      <label>${E.f.cat === "Profissional" && +x.ano === D.temporada ? "Jogos fora do Brasileirão" : "Jogos oficiais"}<input type="number" min="0" data-k="jogos" value="${x.e.jogos}"></label></div>`).join("")}
+  </details>`;
+}
+function ligarLesoes(L, exp){
+  $("#les-btn").onclick = () => $("#les-arq").click();
+  $("#les-arq").onchange = async e => { const f = e.target.files[0]; if (!f) return;
+    try { await lerPlanilha(f); abaLesoes(); } catch(er) { alert(er.message); } };
+  const liga = (id, k) => { const el = $(id); if (el) el.addEventListener(k === "busca" ? "change" : "input", e => { E.f[k] = e.target.value; abaLesoes(); }); };
+  liga("#lf-cat","cat"); liga("#lf-ano","ano"); liga("#lf-tipo","tipo"); liga("#lf-ev","evento"); liga("#lf-busca","busca");
+  document.querySelectorAll(".exp-grade input").forEach(inp => inp.addEventListener("change", e => {
+    const ano = e.target.closest(".exp-grade").dataset.ano, salvo = lerExp(), ch = chaveExp(E.f.cat, ano);
+    salvo[ch] = {...expPadrao(E.f.cat, ano), ...(salvo[ch] || {}), [e.target.dataset.k]: +e.target.value || 0};
+    gravarExp(salvo); const aberto = true; abaLesoes(); const det = document.querySelector("details.bloco"); if (det) det.open = aberto; }));
+  const th = $("#t-les thead"); if (th) th.addEventListener("click", e => { const t = e.target.closest("th[data-k]"); if (!t) return;
+    E.ord = {k: t.dataset.k, d: E.ord.k === t.dataset.k ? -E.ord.d : -1}; abaLesoes(); });
+  $("#les-csv").onclick = () => exportarCSV(L);
+  $("#les-pdf").onclick = () => exportarRelatorio(L, exp);
+}
+function exportarCSV(L){
+  const cab = ["Data","Atleta","Categoria","Diagnóstico","Tipo","Classificação","Região","Membro","Contato","Mecanismo","Contexto","Recidiva","Dias até liberação","Liberação","Gravidade"];
+  const q = v => `"${String(v ?? "").replace(/"/g,'""')}"`;
+  const linhas = L.map(l => [dataLonga(l.d), l.n, l.c, l.diag, l.tipo, l.cl, l.reg, l.mem, l.cont, l.mec, l.ev, l.rec ? "Sim" : "Não", l.dias, l.aberto ? "Em tratamento" : dataLonga(l.fim || ""), severidade(l)].map(q).join(";"));
+  const blob = new Blob(["\uFEFF" + [cab.map(q).join(";"), ...linhas].join("\r\n")], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `lesoes_${E.f.cat}_${E.f.ano}.csv`.replace(/\s+/g,"_"); a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------- gráficos ---------- */
+function confGraficos(L, Lcat, pal){
+  const eixo = {ticks:{color:pal.suave}, grid:{color:pal.linha}}, semGrade = {ticks:{color:pal.suave}, grid:{display:false}};
+  const leg = {labels:{color:pal.tinta, boxWidth:12}};
+  const tipos = contar(L, l => l.tipo).map(x => x[0]);
+  // meses
+  let chaves;
+  if (E.f.ano !== "all") { const ult = E.f.ano === hojeISO().slice(0,4) ? +hojeISO().slice(5,7) : 12; chaves = Array.from({length:ult}, (_,i) => `${E.f.ano}-${String(i+1).padStart(2,"0")}`); }
+  else { const ini = L.map(l => l.d.slice(0,7)).sort()[0], fim = hojeISO().slice(0,7); chaves = []; let [y,m] = ini.split("-").map(Number);
+    while (`${y}-${String(m).padStart(2,"0")}` <= fim) { chaves.push(`${y}-${String(m).padStart(2,"0")}`); if (++m > 12) { m = 1; y++; } } }
+  const rotMes = k => MESES[+k.slice(5,7)-1] + (E.f.ano === "all" ? "/" + k.slice(2,4) : "");
+  const anos = [...new Set(Lcat.map(l => l.d.slice(0,4)))].sort();
+  const hbar = (pares, cor) => ({type:"bar", data:{labels:pares.map(x => x[0]), datasets:[{data:pares.map(x => x[1]), backgroundColor:cor || pal.cor, borderRadius:4}]},
+    options:{indexAxis:"y", plugins:{legend:{display:false}}, scales:{x:{...eixo, ticks:{...eixo.ticks, precision:0}}, y:semGrade}}});
+  const sevCont = [...SEV.map(s => s[0]), "Em tratamento"].map(s => [s, L.filter(l => severidade(l) === s).length]);
+  const cl = contar(L.filter(l => l.tipo === "Muscular" && l.cl && l.cl !== "null"), l => l.cl).sort((a,b) => a[0].localeCompare(b[0]));
+  return {
+    "g-mes": {type:"bar", data:{labels:chaves.map(rotMes), datasets:tipos.map((t,i) => ({label:t, data:chaves.map(k => L.filter(l => l.tipo === t && l.d.startsWith(k)).length), backgroundColor:COR_TIPO[t] || PAL[i % PAL.length], borderRadius:3}))},
+      options:{plugins:{legend:leg}, scales:{x:{...semGrade, stacked:true}, y:{...eixo, stacked:true, ticks:{...eixo.ticks, precision:0}}}}},
+    "g-ano": {type:"bar", data:{labels:anos, datasets:[
+        {label:"Lesões", data:anos.map(a => Lcat.filter(l => l.d.startsWith(a)).length), backgroundColor:pal.cor, borderRadius:4, yAxisID:"y"},
+        {label:"Dias perdidos", type:"line", data:anos.map(a => Lcat.filter(l => l.d.startsWith(a)).reduce((s,l) => s + (l.dias || 0), 0)), borderColor:"#B5736A", backgroundColor:"#B5736A", yAxisID:"y2", tension:0}]},
+      options:{plugins:{legend:leg}, scales:{x:semGrade, y:{...eixo, position:"left", ticks:{...eixo.ticks, precision:0}}, y2:{...eixo, position:"right", grid:{display:false}}}}},
+    "g-tipo": {type:"doughnut", data:{labels:contar(L, l => l.tipo).map(x => x[0]), datasets:[{data:contar(L, l => l.tipo).map(x => x[1]), backgroundColor:contar(L, l => l.tipo).map((x,i) => COR_TIPO[x[0]] || PAL[i % PAL.length]), borderColor:pal.fundo}]},
+      options:{plugins:{legend:{...leg, position:"right"}}}},
+    "g-sev": hbar(sevCont),
+    "g-reg": hbar(contar(L, l => l.reg)),
+    "g-cl": hbar(cl.length ? cl : [["Sem classificação registrada", 0]]),
+    "g-mec": hbar(contar(L, l => l.mec)),
+    "g-cont": hbar(contar(L, l => l.cont)),
+    "g-ev": hbar(contar(L, l => grupoEvento(l.ev))),
+  };
+}
+function desenharGraficosLes(L, Lcat, cs){
+  if (!window.Chart) return;
+  const cor = v => cs.getPropertyValue(v).trim();
+  const pal = {tinta:cor("--tinta"), suave:cor("--suave"), linha:cor("--linha"), fundo:cor("--fundo"), cor:cor("--destaque")};
+  const cfg = confGraficos(L, Lcat, pal);
+  for (const [id, c] of Object.entries(cfg)) { const el = document.getElementById(id); if (!el) continue;
+    if (c.options.indexAxis === "y") el.height = Math.max(160, c.data.labels.length * 26);
+    graficosLes.push(new Chart(el, c)); }
+}
+async function imagemGrafico(c, alto){
+  const cv = document.createElement("canvas"); cv.width = 1000; cv.height = alto || 480;
+  cv.style.cssText = "position:fixed;left:-3000px;top:0;width:1000px;height:" + (alto || 480) + "px"; document.body.appendChild(cv);
+  c.options = {...c.options, responsive:false, animation:false, devicePixelRatio:2};
+  const g = new Chart(cv, c); const url = cv.toDataURL("image/png"); g.destroy(); cv.remove(); return url;
+}
+async function exportarRelatorio(L, exp){
+  if (!window.Chart) { alert("Os gráficos ainda não carregaram. Tente de novo em alguns segundos."); return; }
+  const btn = $("#les-pdf"); btn.disabled = true; btn.textContent = "Montando relatório…";
+  const pal = {tinta:"#1D2329", suave:"#555F6B", linha:"#E2E5E9", fundo:"#FFFFFF", cor:"#3D5A80"};
+  const Lcat = lesFiltro(true), cfg = confGraficos(L, Lcat, pal), I = indicadores(L, exp), img = {};
+  for (const [id, c] of Object.entries(cfg)) img[id] = await imagemGrafico(c, c.options.indexAxis === "y" ? Math.max(300, c.data.labels.length * 40) : 480);
+  const time = D.times.find(t => /athletico/i.test(t)) || "";
+  const filtro = [E.f.cat === "all" ? "todas as categorias" : `categoria ${E.f.cat}`, E.f.ano === "all" ? "todos os anos" : E.f.ano,
+    E.f.tipo === "all" ? "" : `tipo ${E.f.tipo}`, E.f.evento === "all" ? "" : `contexto ${E.f.evento}`, E.f.busca ? `busca “${E.f.busca}”` : ""].filter(Boolean).join(", ");
+  const regU = [...new Set(E.linhas.map(l => l.reg))].filter(r => r !== "Não informado"), semReg = regU.filter(r => !L.some(l => l.reg === r));
+  const rk = (v, r) => `<div class="r-kpi"><b>${v}</b><span>${r}</span></div>`;
+  $("#relatorio").innerHTML = `
+    <h1>Relatório epidemiológico de lesões</h1>
+    <p>${esc(time)}, ${esc(filtro)}. Gerado em ${new Date().toLocaleDateString("pt-BR")} a partir de ${esc(E.arquivo)}.</p>
+    <h2>Resumo</h2>
+    <div class="r-kpis">${rk(fmt(I.n), "lesões")}${rk(I.atletas, "atletas lesionados")}${rk(fmt1(I.inc), "lesões por 1.000 h")}${rk(fmt1(I.carga), "dias perdidos por 1.000 h")}
+      ${rk(fmt1(I.incJ), "por 1.000 h em jogo")}${rk(fmt1(I.incT), "por 1.000 h em treino")}${rk(fmt(I.dias), "dias perdidos")}${rk(I.med == null ? "—" : fmt(I.med), "mediana de dias de afastamento")}</div>
+    <p class="r-nota">${exp ? `Exposição: ${fmt(exp.treino)} h de treino e ${fmt(exp.jogo)} h de jogo. ${exp.det.map(x => `${x.ano}: ${x.e.atletas} atletas, ${x.e.horas} h de treino por semana, ${x.e.semanas} semanas${x.origem ? `, ${x.origem}` : `, ${x.e.jogos} jogos`}`).join("; ")}.` : "Incidência não calculada: selecione uma categoria."}
+      Incidência conta só lesões em jogo oficial e treino. Gravidade pelo consenso de Fuller et al. (2006). Recidivas: ${pc(I.rec)}. Em tratamento: ${I.abertas}.</p>
+    <h2>Evolução</h2><div class="r-graf"><img src="${img["g-mes"]}"><img src="${img["g-ano"]}"></div>
+    <h2>Tipo e gravidade</h2><div class="r-graf"><img src="${img["g-tipo"]}"><img src="${img["g-sev"]}"></div>
+    <h2 class="quebra">Região do corpo</h2><img src="${img["g-reg"]}" style="max-width:80%">
+    <p class="r-nota">Regiões sem lesão no período: ${semReg.length ? esc(semReg.join(", ")) : "nenhuma"}.</p>
+    <h2>Mecanismo, contato e contexto</h2><div class="r-graf"><img src="${img["g-mec"]}"><img src="${img["g-cont"]}"></div><img src="${img["g-ev"]}" style="max-width:60%">
+    <h2 class="quebra">Diagnósticos mais frequentes</h2>
+    <table><thead><tr><th>Diagnóstico</th><th>Casos</th><th>Dias perdidos</th><th>Mediana de dias</th><th>Último caso</th></tr></thead><tbody>${diagnosticos(L).slice(0,15).map(x => `<tr><td>${esc(x.diag)}</td><td>${x.n}</td><td>${fmt(x.dias)}</td><td>${x.med == null ? "—" : fmt(x.med)}</td><td>${dataLonga(x.ult)}</td></tr>`).join("")}</tbody></table>
+    <h2>Atletas com mais dias perdidos</h2>
+    <table><thead><tr><th>Atleta</th><th>Lesões</th><th>Dias perdidos</th><th>Última lesão</th><th>Situação</th></tr></thead><tbody>${porAtleta(L).slice(0,20).map(x => `<tr><td>${esc(x.n)}</td><td>${x.qt}</td><td>${fmt(x.dias)}</td><td>${dataLonga(x.ult.d)}: ${esc(x.ult.diag)}</td><td>${x.aberta ? "Em tratamento" : "Liberado"}</td></tr>`).join("")}</tbody></table>`;
+  btn.disabled = false; btn.textContent = "Exportar relatório (PDF)";
+  setTimeout(() => window.print(), 300);
+}
+
+carregarLesoesSalvas();
+iniciar();
+</script>
+</body>
+</html>
