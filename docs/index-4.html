@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minutagem</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>try{const t=localStorage.getItem("tema");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<style>
+:root{
+  --fundo:#FFFFFF; --sup:#F6F7F9; --tinta:#1D2329; --suave:#66707B; --linha:#E2E5E9;
+  --destaque:#3D5A80; --tit:#3D5A80; --ent:#9DB5CF; --banco:#E1E7EE; --foco:#3D5A80; --perigo:#B4483C;
+  --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --texto:"Barlow",system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --fundo:#0E1013; --sup:#171A1F; --tinta:#E6E9ED; --suave:#8C95A0; --linha:#2A2F36;
+  --destaque:#8FB0D6; --tit:#8FB0D6; --ent:#4B6686; --banco:#262C34; --foco:#8FB0D6; --perigo:#E08A7F; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --fundo:#0E1013; --sup:#171A1F; --tinta:#E6E9ED; --suave:#8C95A0; --linha:#2A2F36;
+  --destaque:#8FB0D6; --tit:#8FB0D6; --ent:#4B6686; --banco:#262C34; --foco:#8FB0D6; --perigo:#E08A7F; color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--fundo);color:var(--tinta);font:15px/1.5 var(--texto)}
+.topo{padding:22px clamp(14px,3vw,36px) 14px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 24px;justify-content:space-between}
+.marca{font:500 15px var(--cond);color:var(--suave)}
+h1{font:700 clamp(32px,5.5vw,52px)/1 var(--cond);margin:2px 0 0}
+.acoes{display:flex;flex-wrap:wrap;align-items:center;gap:10px;color:var(--suave);font-size:13px}
+.btn{font:500 14px var(--texto);color:var(--tinta);background:var(--sup);border:1px solid var(--linha);border-radius:8px;padding:7px 12px;cursor:pointer}
+.btn:hover{border-color:var(--suave)}
+.btn.prim{background:var(--destaque);border-color:var(--destaque);color:var(--fundo)}
+.btn.ativo{border-color:var(--destaque);color:var(--destaque)}
+.filtros{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px 16px;padding:14px clamp(14px,3vw,36px);background:var(--sup);border-block:1px solid var(--linha)}
+.filtros label{display:flex;flex-direction:column;font-size:12px;color:var(--suave);gap:4px}
+select,input{font:inherit;font-size:14px;color:var(--tinta);background:var(--fundo);border:1px solid var(--linha);border-radius:8px;padding:7px 9px;min-width:0;width:100%}
+:focus-visible{outline:2px solid var(--foco);outline-offset:2px}
+.abas{display:flex;gap:6px;padding:16px clamp(14px,3vw,36px) 0;overflow-x:auto;border-bottom:1px solid var(--linha)}
+.abas button{font:600 17px var(--cond);background:none;border:0;border-bottom:3px solid transparent;color:var(--suave);padding:6px 12px 8px;cursor:pointer;white-space:nowrap}
+.abas button[aria-selected=true]{color:var(--tinta);border-color:var(--destaque)}
+main{padding:20px clamp(14px,3vw,36px) 90px}
+.explica{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:13px;color:var(--suave);margin:0 0 12px}
+.explica span{display:inline-flex;align-items:center;gap:6px}
+.explica strong{color:var(--tinta);font-weight:500}
+.rolar{overflow-x:auto;border:1px solid var(--linha);border-radius:12px;background:var(--fundo)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+th,td{padding:9px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--linha)}
+th{font:600 14px var(--cond);color:var(--suave);background:var(--sup);cursor:pointer;user-select:none;vertical-align:bottom}
+th[data-ativo]{color:var(--tinta)}
+th:first-child,td:first-child,.esq{text-align:left}
+td:first-child,th:first-child{position:sticky;left:0;z-index:1;background:inherit}
+tbody tr{background:var(--fundo)}
+tbody tr:hover{background:var(--sup)}
+tr.cab td{background:var(--sup);font:700 17px var(--cond);text-align:left;padding-top:14px}
+tr.cab small{font:400 13px var(--texto);color:var(--suave);margin-left:10px}
+.num{font-variant-numeric:tabular-nums}
+.nome{background:none;border:0;padding:0;font:500 14px var(--texto);color:var(--tinta);cursor:pointer;text-align:left}
+.nome:hover{color:var(--destaque)}
+.nome.sel::after{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--destaque);margin-left:7px;vertical-align:middle}
+.pos{display:inline-block;min-width:38px;text-align:center;font:600 13px var(--cond);border:1px solid var(--linha);border-radius:6px;padding:1px 6px;color:var(--suave)}
+.pos.mudou{border-color:var(--destaque);color:var(--destaque)}
+td select{width:auto;padding:3px 6px;font-size:13px}
+.barra{display:inline-block;width:64px;height:6px;background:var(--banco);border-radius:3px;margin-left:8px;vertical-align:middle;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--tit)}
+.faixa{display:flex;gap:3px;align-items:center}
+.q{width:10px;height:18px;border-radius:2px;flex:none;display:inline-block}
+.q.t{background:var(--tit)} .q.e{background:var(--ent)} .q.b{background:var(--banco)}
+.q.n{box-shadow:inset 0 0 0 1.5px var(--linha)} .q.p{opacity:0}
+.grade{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))}
+.bloco{background:var(--fundo);border:1px solid var(--linha);border-radius:12px;padding:16px 18px}
+.bloco h2{font:700 22px var(--cond);margin:0 0 10px}
+.bloco h3{font:600 16px var(--cond);margin:16px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--linha);border-radius:999px;padding:4px 6px 4px 12px;font-size:14px}
+.chip b{width:10px;height:10px;border-radius:50%}
+.chip button{border:0;background:var(--sup);color:var(--tinta);border-radius:50%;width:22px;height:22px;cursor:pointer}
+.melhor{font-weight:600;color:var(--destaque)}
+.vazio{color:var(--suave);padding:28px;text-align:center}
+.nota{color:var(--suave);font-size:13px;margin:10px 0 0;max-width:80ch}
+.lista{list-style:none;margin:0;padding:0}
+.lista li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--linha)}
+.lista li span:last-child{color:var(--suave)}
+.placar{font:700 clamp(26px,4.5vw,40px)/1.1 var(--cond);margin:4px 0}
+canvas{max-height:340px}
+.dest td{background:color-mix(in srgb,var(--destaque) 10%,var(--fundo))}
+/* cartão do atleta */
+#cartao{position:fixed;z-index:20;width:300px;max-width:calc(100vw - 24px);background:var(--fundo);border:1px solid var(--linha);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:16px;display:none}
+#cartao.on{display:block}
+.c-topo{display:flex;gap:14px;align-items:center}
+.c-foto{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--sup);flex:none;display:flex;align-items:center;justify-content:center;font:700 24px var(--cond);color:var(--suave);border:1px solid var(--linha)}
+.c-nome{font:700 22px/1.05 var(--cond)}
+.c-sub{color:var(--suave);font-size:13px;margin-top:3px}
+.c-dados{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:14px 0 0;font-size:14px}
+.c-dados dt{color:var(--suave)} .c-dados dd{margin:0}
+.c-temp{margin-top:12px;padding-top:12px;border-top:1px solid var(--linha);font-size:14px}
+.c-acoes{display:flex;gap:8px;margin-top:12px}
+/* barra de edição */
+#barra-ed{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:15;display:none;align-items:center;gap:12px;background:var(--tinta);color:var(--fundo);border-radius:12px;padding:10px 12px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px;max-width:calc(100vw - 24px);flex-wrap:wrap}
+#barra-ed.on{display:flex}
+#barra-ed .btn{background:transparent;color:var(--fundo);border-color:color-mix(in srgb,var(--fundo) 40%,transparent)}
+#barra-ed .btn.prim{background:var(--fundo);color:var(--tinta)}
+dialog{border:1px solid var(--linha);border-radius:14px;background:var(--fundo);color:var(--tinta);max-width:min(560px,calc(100vw - 24px));padding:20px 22px}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+dialog h2{font:700 24px var(--cond);margin:0 0 8px}
+dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
+dialog li{margin:4px 0}
+.erro{color:var(--perigo);font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="topo">
+  <div><div class="marca" id="marca">Minutagem</div><h1 id="titulo">Carregando…</h1></div>
+  <div class="acoes">
+    <span id="atual"></span>
+    <button class="btn" id="b-tema" title="Alternar tema">Tema: automático</button>
+    <button class="btn" id="b-editar">Editar posições</button>
+  </div>
+</header>
+<section class="filtros" id="filtros" aria-label="Filtros"></section>
+<nav class="abas" role="tablist" id="abas">
+  <button role="tab" data-aba="elenco" aria-selected="true">Elenco</button>
+  <button role="tab" data-aba="comparar" aria-selected="false">Comparar atletas</button>
+  <button role="tab" data-aba="posicao" aria-selected="false">Posição entre times</button>
+  <button role="tab" data-aba="ultimo" aria-selected="false">Último jogo</button>
+</nav>
+<main id="app"></main>
+
+<div id="cartao" role="dialog" aria-label="Informações do atleta"></div>
+<div id="barra-ed" role="status"><span id="ed-txt"></span>
+  <button class="btn" id="ed-desc">Descartar</button><button class="btn prim" id="ed-salvar">Salvar alterações</button></div>
+
+<dialog id="dlg">
+  <h2>Conectar para editar posições</h2>
+  <p class="nota" style="margin-top:0">Necessário uma vez por computador. A chave fica salva só neste navegador e permite alterar apenas este repositório.</p>
+  <ol>
+    <li>No GitHub, abra <strong>Settings → Developer settings → Personal access tokens → Fine-grained tokens</strong> e clique em <strong>Generate new token</strong>.</li>
+    <li>Em <strong>Repository access</strong>, escolha <strong>Only select repositories</strong> e marque <strong>minutagem</strong>.</li>
+    <li>Em <strong>Permissions</strong>, dê <strong>Read and write</strong> para <strong>Contents</strong> e para <strong>Actions</strong>.</li>
+    <li>Gere a chave, copie e cole abaixo.</li>
+  </ol>
+  <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--suave)">Chave de acesso
+    <input type="password" id="dlg-token" placeholder="github_pat_…" autocomplete="off"></label>
+  <p class="erro" id="dlg-erro"></p>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+    <button class="btn" id="dlg-cancelar">Cancelar</button><button class="btn prim" id="dlg-ok">Conectar</button></div>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const ORD = ["GOL","LAT","ZAG","VOL","MEI","EXT","ATA"];
+const NOME_GRUPO = {GOL:"Goleiros",LAT:"Laterais",ZAG:"Zagueiros",VOL:"Volantes",MEI:"Meias",EXT:"Extremos",ATA:"Atacantes","—":"Sem posição definida"};
+const CORES = ["#3D5A80","#B5736A","#5E8C61","#8A7AB8"];
+const S = {comp:"all", time:0, grupo:"all", met:"r", minJ:0, minM:0, de:"", ate:"", mando:"all",
+           aba:"elenco", cmp:[], ord:{k:"grupo", d:-1}, grupoPos:"ATA", editando:false};
+const pendentes = new Map(); // atleta idx -> grupo novo
+let D, P = {}, grafico;
+
+const fmt = n => Math.round(n).toLocaleString("pt-BR");
+const pc = n => n.toFixed(1).replace(".", ",") + "%";
+const dataBR = d => d.slice(8,10) + "/" + d.slice(5,7);
+const dataLonga = d => d.split("-").reverse().join("/");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const guarda = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} };
+const le = k => { try { return localStorage.getItem(k); } catch(e) { return null; } };
+
+/* ---------------- carga ---------------- */
+async function iniciar(){
+  try {
+    const r = await fetch("data/dados.json", {cache:"no-store"});
+    if (!r.ok) throw new Error(r.status);
+    D = await r.json();
+  } catch(e) {
+    $("#titulo").textContent = "Sem dados ainda";
+    $("#app").innerHTML = '<p class="vazio">O arquivo data/dados.json ainda não existe. No GitHub, abra a aba Actions, escolha “Atualizar minutagem” e clique em “Run workflow”. Quando terminar, recarregue esta página.</p>';
+    return;
+  }
+  try { const r = await fetch("data/perfis.json", {cache:"no-store"}); if (r.ok) P = await r.json(); } catch(e){}
+  preparar(); montarFiltros(); ligarGlobais(); desenhar();
+}
+
+function preparar(){
+  D.porTime = D.times.map(() => []);
+  D.jogos.forEach((g,i) => { D.porTime[g[2]].push(i); D.porTime[g[3]].push(i); });
+  D.porTime.forEach(l => l.sort((a,b) => D.jogos[a][1].localeCompare(D.jogos[b][1])));
+  D.part = D.atletas.map(() => new Map());
+  D.p.forEach(r => D.part[r[1]].set(r[0], r));
+  D.atlTime = D.times.map(() => []);
+  D.atletas.forEach((a,i) => D.atlTime[a[1]].push(i));
+  D.grupoOriginal = D.atletas.map(a => a[2]);
+  const cap = D.times.findIndex(t => /athletico/i.test(t));
+  S.time = cap >= 0 ? cap : 0;
+  const d = new Date(D.atualizado);
+  $("#atual").textContent = "Atualizado em " + d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
+
+function montarFiltros(){
+  const op = (v,t,sel) => `<option value="${esc(v)}"${sel?" selected":""}>${esc(t)}</option>`;
+  const times = D.times.map((t,i) => [i,t]).sort((a,b) => a[1].localeCompare(b[1]));
+  $("#filtros").innerHTML = `
+    <label>Competição<select id="f-comp">${op("all","Todas")}${D.competicoes.map((c,i) => op(i,c)).join("")}</select></label>
+    <label>Time<select id="f-time">${times.map(([i,t]) => op(i,t,i===S.time)).join("")}</select></label>
+    <label>Posição<select id="f-grupo">${op("all","Todas")}${ORD.map(g => op(g,NOME_GRUPO[g])).join("")}${op("—","Sem posição definida")}</select></label>
+    <label>Minutos<select id="f-met">${op("r","Reais, com acréscimos")}${op("90","Padrão de 90 minutos")}</select></label>
+    <label>Mando<select id="f-mando">${op("all","Casa e fora")}${op("casa","Só em casa")}${op("fora","Só fora")}</select></label>
+    <label>De<input type="date" id="f-de"></label>
+    <label>Até<input type="date" id="f-ate"></label>
+    <label>Mínimo de jogos<input type="number" min="0" id="f-minJ" value="0"></label>
+    <label>Mínimo de minutos<input type="number" min="0" step="50" id="f-minM" value="0"></label>`;
+  const liga = (id, k, num) => $(id).addEventListener("input", e => { S[k] = num ? (+e.target.value || 0) : e.target.value; desenhar(); });
+  liga("#f-comp","comp"); liga("#f-time","time",true); liga("#f-grupo","grupo"); liga("#f-met","met");
+  liga("#f-mando","mando"); liga("#f-de","de"); liga("#f-ate","ate"); liga("#f-minJ","minJ",true); liga("#f-minM","minM",true);
+}
+
+function ligarGlobais(){
+  $("#abas").addEventListener("click", e => {
+    const b = e.target.closest("button[data-aba]"); if (!b) return;
+    S.aba = b.dataset.aba;
+    document.querySelectorAll("#abas button").forEach(x => x.setAttribute("aria-selected", x === b));
+    fecharCartao(true); desenhar();
+  });
+  const temas = ["auto","light","dark"], rot = {auto:"automático", light:"claro", dark:"escuro"};
+  let tema = le("tema") || "auto";
+  $("#b-tema").textContent = "Tema: " + rot[tema];
+  $("#b-tema").addEventListener("click", () => {
+    tema = temas[(temas.indexOf(tema) + 1) % 3];
+    if (tema === "auto") { delete document.documentElement.dataset.theme; guarda("tema", null); }
+    else { document.documentElement.dataset.theme = tema; guarda("tema", tema); }
+    $("#b-tema").textContent = "Tema: " + rot[tema];
+    if (S.aba === "comparar") desenhar();
+  });
+  $("#b-editar").addEventListener("click", () => {
+    if (S.editando) { S.editando = false; atualizarEdicao(); desenhar(); return; }
+    if (!le("gh_token")) { abrirDialogo(); return; }
+    S.editando = true; atualizarEdicao(); desenhar();
+  });
+  $("#dlg-cancelar").addEventListener("click", () => $("#dlg").close());
+  $("#dlg-ok").addEventListener("click", conectar);
+  $("#ed-desc").addEventListener("click", () => {
+    for (const [a] of pendentes) D.atletas[a][2] = D.grupoOriginal[a];
+    pendentes.clear(); atualizarEdicao(); desenhar();
+  });
+  $("#ed-salvar").addEventListener("click", salvarGithub);
+  // cartão
+  const app = $("#app");
+  let timer;
+  app.addEventListener("mouseover", e => {
+    const b = e.target.closest(".nome"); if (!b || cartaoFixo) return;
+    clearTimeout(timer); timer = setTimeout(() => abrirCartao(+b.dataset.a, b, false), 180);
+  });
+  app.addEventListener("mouseout", e => {
+    const b = e.target.closest(".nome"); if (!b) return;
+    clearTimeout(timer); if (!cartaoFixo) setTimeout(() => { if (!sobreCartao) fecharCartao(); }, 120);
+  });
+  app.addEventListener("click", e => {
+    const b = e.target.closest(".nome"); if (!b) return;
+    abrirCartao(+b.dataset.a, b, true);
+  });
+  $("#cartao").addEventListener("mouseenter", () => sobreCartao = true);
+  $("#cartao").addEventListener("mouseleave", () => { sobreCartao = false; if (!cartaoFixo) fecharCartao(); });
+  document.addEventListener("click", e => { if (cartaoFixo && !e.target.closest("#cartao") && !e.target.closest(".nome")) fecharCartao(true); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") fecharCartao(true); });
+  window.addEventListener("beforeunload", e => { if (pendentes.size) { e.preventDefault(); e.returnValue = ""; } });
+}
+
+/* ---------------- cálculos ---------------- */
+function jogosDoTime(t){
+  return D.porTime[t].filter(j => {
+    const g = D.jogos[j];
+    if (S.comp !== "all" && g[0] !== +S.comp) return false;
+    if (S.de && g[1] < S.de) return false;
+    if (S.ate && g[1] > S.ate) return false;
+    if (S.mando === "casa" && g[2] !== t) return false;
+    if (S.mando === "fora" && g[3] !== t) return false;
+    return true;
+  });
+}
+function stats(a){
+  const t = D.atletas[a][1], jogos = jogosDoTime(t);
+  let primeira = null;
+  for (const j of D.part[a].keys()) {
+    const g = D.jogos[j];
+    if (S.comp !== "all" && g[0] !== +S.comp) continue;
+    if (!primeira || g[1] < primeira) primeira = g[1];
+  }
+  const o = {a, t, jt:jogos.length, desde:0, rel:0, nrel:0, tit:0, ent:0, banco:0, min:0, poss:0, faixa:[]};
+  for (const j of jogos) {
+    const g = D.jogos[j];
+    if (!primeira || g[1] < primeira) { o.faixa.push(["p", j, null]); continue; }
+    o.desde++;
+    o.poss += S.met === "90" ? 90 : (g[6] || 90);
+    const r = D.part[a].get(j);
+    if (!r) { o.nrel++; o.faixa.push(["n", j, null]); continue; }
+    o.rel++;
+    const m = S.met === "90" ? r[3] : (r[4] ?? r[3]);
+    o.min += m;
+    if (r[2] === 0) o.tit++; else if (r[2] === 1) o.ent++; else o.banco++;
+    o.faixa.push([["t","e","b"][r[2]], j, m]);
+  }
+  o.jogou = o.tit + o.ent;
+  o.pct = o.poss ? 100 * o.min / o.poss : 0;
+  o.mpj = o.jogou ? o.min / o.jogou : 0;
+  o.ptit = o.desde ? 100 * o.tit / o.desde : 0;
+  return o;
+}
+
+const STATUS = {t:"Titular", e:"Entrou durante o jogo", b:"No banco, não entrou", n:"Não relacionado"};
+function faixa(o){
+  return `<div class="faixa">${o.faixa.map(([c,j,m], i) => {
+    if (c === "p") return `<span class="q p"></span>`;
+    const g = D.jogos[j], adv = g[2] === o.t ? D.times[g[3]] : D.times[g[2]];
+    const tip = `Jogo ${i+1}, ${dataBR(g[1])} contra ${adv} (${g[2] === o.t ? "casa" : "fora"}): ${STATUS[c]}${m ? ", " + m + " min" : ""}`;
+    return `<span class="q ${c}" title="${esc(tip)}"></span>`;
+  }).join("")}</div>`;
+}
+const explicaFaixa = `<div class="explica"><strong>Sequência de jogos:</strong>
+  <span>cada quadrado é um jogo do time, do primeiro (à esquerda) ao mais recente (à direita).</span>
+  <span><i class="q t"></i>Titular</span><span><i class="q e"></i>Entrou durante o jogo</span>
+  <span><i class="q b"></i>No banco, não entrou</span><span><i class="q n"></i>Não relacionado</span>
+  <span>Passe o mouse sobre um quadrado para ver o jogo.</span></div>`;
+
+function desenhar(){
+  $("#titulo").textContent = D.times[S.time];
+  $("#marca").textContent = "Minutagem " + D.temporada + (S.comp === "all" ? "" : ", " + D.competicoes[S.comp]);
+  $("#b-editar").textContent = S.editando ? "Sair da edição" : "Editar posições";
+  $("#b-editar").classList.toggle("ativo", S.editando);
+  ({elenco:abaElenco, comparar:abaComparar, posicao:abaPosicao, ultimo:abaUltimo})[S.aba]();
+}
+
+/* ---------------- Elenco ---------------- */
+const COLS = [
+  ["nome","Atleta"],["grupo","Posição"],["rel","Relacionado"],["nrel","Não relac."],["tit","Titular"],["ent","Entrou"],
+  ["banco","Banco"],["min","Minutos"],["pct","% dos min. possíveis"],["mpj","Min. por jogo"],["ptit","% titular"]];
+function valor(o,k){
+  if (k === "nome") return D.atletas[o.a][0];
+  if (k === "grupo") { const i = ORD.indexOf(D.atletas[o.a][2]); return (i < 0 ? 99 : i) * 1e6 - o.min; }
+  return o[k];
+}
+function celulaPos(a){
+  const g = D.atletas[a][2], mudou = pendentes.has(a);
+  if (!S.editando) return `<span class="pos${mudou?" mudou":""}" title="ESPN: ${esc(D.atletas[a][3])}">${g}</span>`;
+  return `<select data-pos="${a}" aria-label="Posição de ${esc(D.atletas[a][0])}">${[...ORD,"—"].map(x => `<option${x===g?" selected":""}>${x}</option>`).join("")}</select>`;
+}
+function abaElenco(){
+  let linhas = D.atlTime[S.time].map(stats).filter(o => o.rel > 0)
+    .filter(o => (S.grupo === "all" || D.atletas[o.a][2] === S.grupo) && o.jogou >= S.minJ && o.min >= S.minM);
+  if (!linhas.length) { $("#app").innerHTML = '<p class="vazio">Nenhum atleta atende aos filtros. Reduza o mínimo de jogos ou de minutos.</p>'; return; }
+  const {k,d} = S.ord;
+  linhas.sort((x,y) => {
+    const a = valor(x,k), b = valor(y,k);
+    if (k === "grupo") return a - b;
+    if (k === "nome") return d === -1 ? a.localeCompare(b) : b.localeCompare(a);
+    return d === -1 ? b - a : a - b;
+  });
+  const cab = COLS.map(([c,t]) => `<th data-k="${c}"${c===k?" data-ativo":""} class="${c==="nome"||c==="grupo"?"esq":""}">${t}</th>`).join("") + '<th class="esq">Sequência de jogos</th>';
+  let html = "", grupoAtual = null;
+  for (const o of linhas) {
+    const g = D.atletas[o.a][2];
+    if (k === "grupo" && g !== grupoAtual) {
+      grupoAtual = g;
+      const doGrupo = linhas.filter(x => D.atletas[x.a][2] === g);
+      const tot = doGrupo.reduce((s,x) => s + x.min, 0), lid = doGrupo[0];
+      html += `<tr class="cab"><td colspan="${COLS.length+1}">${NOME_GRUPO[g] || g}<small>${lid && tot ? esc(D.atletas[lid.a][0]) + " tem " + pc(100*lid.min/tot) + " dos minutos da posição" : ""}</small></td></tr>`;
+    }
+    const sel = S.cmp.includes(o.a);
+    html += `<tr><td><button class="nome${sel?" sel":""}" data-a="${o.a}">${esc(D.atletas[o.a][0])}</button></td>
+      <td class="esq">${celulaPos(o.a)}</td><td class="num">${o.rel}</td><td class="num">${o.nrel}</td><td class="num">${o.tit}</td>
+      <td class="num">${o.ent}</td><td class="num">${o.banco}</td><td class="num">${fmt(o.min)}</td>
+      <td class="num">${pc(o.pct)}<span class="barra"><i style="width:${Math.min(100,o.pct)}%"></i></span></td>
+      <td class="num">${fmt(o.mpj)}</td><td class="num">${pc(o.ptit)}</td><td class="esq">${faixa(o)}</td></tr>`;
+  }
+  $("#app").innerHTML = explicaFaixa + `<div class="rolar"><table><thead><tr>${cab}</tr></thead><tbody>${html}</tbody></table></div>
+    <p class="nota">Os percentuais contam a partir do primeiro jogo em que o atleta foi relacionado, para não penalizar quem chegou no meio da temporada. Passe o mouse sobre o nome para ver os dados do atleta; clique para fixar o cartão e levar o atleta à comparação.${S.editando ? " Em modo de edição: troque a posição na coluna Posição e clique em Salvar alterações." : ""}</p>`;
+  $("#app thead").addEventListener("click", e => {
+    const th = e.target.closest("th[data-k]"); if (!th) return;
+    S.ord = {k: th.dataset.k, d: S.ord.k === th.dataset.k ? -S.ord.d : -1}; abaElenco();
+  });
+  $("#app tbody").addEventListener("change", e => {
+    const s = e.target.closest("select[data-pos]"); if (!s) return;
+    const a = +s.dataset.pos;
+    D.atletas[a][2] = s.value;
+    if (s.value === D.grupoOriginal[a]) pendentes.delete(a); else pendentes.set(a, s.value);
+    atualizarEdicao();
+  });
+}
+
+/* ---------------- cartão do atleta ---------------- */
+let cartaoFixo = false, sobreCartao = false;
+function idade(nasc){
+  if (!nasc) return null;
+  const n = new Date(nasc + "T12:00:00"), h = new Date();
+  let i = h.getFullYear() - n.getFullYear();
+  if (h < new Date(h.getFullYear(), n.getMonth(), n.getDate())) i--;
+  return i;
+}
+function iniciais(nome){ return nome.split(" ").filter(Boolean).map(p => p[0]).slice(0,2).join("").toUpperCase(); }
+function abrirCartao(a, ancora, fixar){
+  const at = D.atletas[a], aid = at[4], p = P[aid] || [], o = stats(a);
+  const [nomeC, nasc, nac, alt, peso, foto, local] = p;
+  const id = idade(nasc);
+  const fotoUrl = foto || (aid ? `https://a.espncdn.com/i/headshots/soccer/players/full/${aid}.png` : "");
+  const dados = [
+    ["Idade", id != null ? `${id} anos (${dataLonga(nasc)})` : ""],
+    ["Nascimento", local], ["Nacionalidade", nac], ["Altura", alt], ["Peso", peso], ["Camisa", at[5]],
+    ["Posição", `${NOME_GRUPO[at[2]] || at[2]} (ESPN: ${at[3]})`]].filter(([,v]) => v);
+  const sel = S.cmp.includes(a);
+  const c = $("#cartao");
+  c.innerHTML = `<div class="c-topo">
+      ${fotoUrl ? `<img class="c-foto" src="${esc(fotoUrl)}" alt="" onerror="this.outerHTML='<div class=&quot;c-foto&quot;>${esc(iniciais(at[0]))}</div>'">` : `<div class="c-foto">${esc(iniciais(at[0]))}</div>`}
+      <div><div class="c-nome">${esc(at[0])}</div><div class="c-sub">${esc(nomeC && nomeC !== at[0] ? nomeC : D.times[at[1]])}</div>
+      ${nomeC && nomeC !== at[0] ? `<div class="c-sub">${esc(D.times[at[1]])}</div>` : ""}</div></div>
+    <dl class="c-dados">${dados.map(([k,v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${!p.length ? '<p class="nota" style="margin-top:8px">O ESPN não tem cadastro completo deste atleta.</p>' : ""}
+    <div class="c-temp">${o.jogou} jogos, ${fmt(o.min)} min, ${pc(o.pct)} dos minutos possíveis, titular em ${o.tit} de ${o.desde}.</div>
+    ${fixar ? `<div class="c-acoes"><button class="btn${sel?"":" prim"}" id="c-cmp">${sel ? "Tirar da comparação" : "Adicionar à comparação"}</button><button class="btn" id="c-fechar">Fechar</button></div>` : ""}`;
+  c.classList.add("on");
+  cartaoFixo = fixar;
+  const r = ancora.getBoundingClientRect(), w = c.offsetWidth, h = c.offsetHeight;
+  let x = r.left, y = r.bottom + 8;
+  if (x + w > innerWidth - 12) x = innerWidth - w - 12;
+  if (y + h > innerHeight - 12) y = Math.max(12, r.top - h - 8);
+  c.style.left = Math.max(12, x) + "px"; c.style.top = y + "px";
+  if (fixar) {
+    $("#c-cmp").onclick = () => { alternar(a); fecharCartao(true); if (S.aba === "elenco") abaElenco(); else desenhar(); };
+    $("#c-fechar").onclick = () => fecharCartao(true);
+  }
+}
+function fecharCartao(forcar){ if (cartaoFixo && !forcar) return; cartaoFixo = false; $("#cartao").classList.remove("on"); }
+function alternar(a){
+  const i = S.cmp.indexOf(a);
+  if (i >= 0) S.cmp.splice(i,1); else { if (S.cmp.length >= 4) S.cmp.shift(); S.cmp.push(a); }
+}
+
+/* ---------------- Comparar ---------------- */
+function abaComparar(){
+  const rotulos = D.atletas.map((a,i) => [i, `${a[0]} (${D.times[a[1]]})`]);
+  $("#app").innerHTML = `
+    <div class="bloco"><h2>Comparar atletas</h2>
+      <input list="lista-atl" id="busca" placeholder="Digite o nome do atleta" style="max-width:420px">
+      <datalist id="lista-atl">${rotulos.map(([,r]) => `<option value="${esc(r)}">`).join("")}</datalist>
+      <div class="chips" id="chips"></div>
+      <p class="nota" style="margin-top:0">Até 4 atletas, de qualquer time. Também dá para adicionar pelo cartão do atleta na aba Elenco.</p>
+    </div><div id="cmp-corpo"></div>`;
+  $("#busca").addEventListener("change", e => {
+    const achado = rotulos.find(([,r]) => r === e.target.value);
+    if (achado && !S.cmp.includes(achado[0])) { alternar(achado[0]); e.target.value = ""; corpoComparar(); }
+  });
+  corpoComparar();
+}
+function corpoComparar(){
+  $("#chips").innerHTML = S.cmp.map((a,i) => `<span class="chip"><b style="background:${CORES[i]}"></b>${esc(D.atletas[a][0])}<button data-a="${a}" aria-label="Remover">×</button></span>`).join("");
+  $("#chips").onclick = e => { const b = e.target.closest("button"); if (b) { alternar(+b.dataset.a); corpoComparar(); } };
+  const alvo = $("#cmp-corpo");
+  if (grafico) { grafico.destroy(); grafico = null; }
+  if (!S.cmp.length) { alvo.innerHTML = '<p class="vazio">Adicione atletas pela busca acima.</p>'; return; }
+  const st = S.cmp.map(stats);
+  const linhas = [
+    ["Time", o => D.times[o.t], null], ["Posição", o => D.atletas[o.a][2], null],
+    ["Jogos do time desde a chegada", o => o.desde, null], ["Relacionado", o => o.rel, 1],
+    ["Não relacionado", o => o.nrel, -1], ["Titular", o => o.tit, 1], ["Entrou durante o jogo", o => o.ent, 0],
+    ["No banco, não entrou", o => o.banco, 0], ["Minutos", o => o.min, 1], ["% dos minutos possíveis", o => o.pct, 1],
+    ["Minutos por jogo jogado", o => o.mpj, 1], ["% de titularidade", o => o.ptit, 1]];
+  const corpo = linhas.map(([rot, f, dir]) => {
+    const vals = st.map(f), alvoV = dir ? (dir > 0 ? Math.max(...vals) : Math.min(...vals)) : null;
+    return `<tr><td>${rot}</td>${vals.map(v => `<td class="num${dir && st.length>1 && v===alvoV ? " melhor" : ""}">${
+      rot.startsWith("%") ? pc(v) : typeof v === "number" ? fmt(v) : esc(v)}</td>`).join("")}</tr>`;
+  }).join("");
+  alvo.innerHTML = `<div class="grade" style="margin-top:18px">
+    <div class="bloco"><h2>Números</h2><div class="rolar"><table><thead><tr><th class="esq">Indicador</th>${st.map((o,i) => `<th style="color:${CORES[i]}">${esc(D.atletas[o.a][0])}</th>`).join("")}</tr></thead><tbody>${corpo}</tbody></table></div></div>
+    <div class="bloco"><h2>Minutos acumulados na temporada</h2><canvas id="graf"></canvas></div></div>
+    <div class="bloco" style="margin-top:18px"><h2>Jogo a jogo</h2>${explicaFaixa}
+    ${st.map((o,i) => `<h3 style="color:${CORES[i]}">${esc(D.atletas[o.a][0])} (${esc(D.times[o.t])})</h3>${faixa(o)}`).join("")}</div>`;
+  const datas = [...new Set(st.flatMap(o => o.faixa.filter(f => f[0] !== "p").map(f => D.jogos[f[1]][1])))].sort();
+  const series = st.map((o,i) => {
+    let acc = 0; const porData = {};
+    o.faixa.forEach(([c,j,m]) => { if (c !== "p") { acc += m || 0; porData[D.jogos[j][1]] = acc; } });
+    return {label: D.atletas[o.a][0], data: datas.map(d => porData[d] ?? null), borderColor: CORES[i],
+            backgroundColor: CORES[i], spanGaps: true, pointRadius: 2, tension: 0, borderWidth: 2};
+  });
+  if (window.Chart) {
+    const cs = getComputedStyle(document.documentElement), cor = v => cs.getPropertyValue(v).trim();
+    grafico = new Chart($("#graf"), {type:"line", data:{labels: datas.map(dataBR), datasets: series},
+      options:{responsive:true, interaction:{mode:"index", intersect:false},
+        plugins:{legend:{labels:{color:cor("--tinta")}}},
+        scales:{x:{ticks:{color:cor("--suave"), maxTicksLimit:12}, grid:{display:false}},
+                y:{ticks:{color:cor("--suave")}, grid:{color:cor("--linha")}}}}});
+  }
+}
+
+/* ---------------- Posição entre times ---------------- */
+function abaPosicao(){
+  const g = S.grupoPos;
+  const linhas = D.times.map((nome,t) => {
+    const st = D.atlTime[t].filter(a => D.atletas[a][2] === g).map(stats).filter(o => o.jogou > 0 && o.jogou >= S.minJ && o.min >= S.minM).sort((a,b) => b.min - a.min);
+    if (!st.length) return null;
+    const tot = st.reduce((s,o) => s + o.min, 0);
+    return {t, nome, n: st.length, l: st[0], s: st[1], conc: tot ? 100 * st[0].min / tot : 0};
+  }).filter(Boolean).sort((a,b) => b.conc - a.conc);
+  const meu = D.atlTime[S.time].map(stats).filter(o => o.rel > 0);
+  const resumoMeu = ORD.map(gr => {
+    const st = meu.filter(o => D.atletas[o.a][2] === gr && o.jogou > 0).sort((a,b) => b.min - a.min);
+    if (!st.length) return "";
+    const tot = st.reduce((s,o) => s + o.min, 0), res = tot - st[0].min;
+    return `<tr><td>${NOME_GRUPO[gr]}</td><td class="esq"><button class="nome" data-a="${st[0].a}">${esc(D.atletas[st[0].a][0])}</button></td><td class="num">${pc(st[0].pct)}</td>
+      <td class="num">${pc(st[0].ptit)}</td><td class="num">${st.length - 1}</td><td class="num">${fmt(res)}</td><td class="num">${pc(tot ? 100*res/tot : 0)}</td></tr>`;
+  }).join("");
+  $("#app").innerHTML = `
+    <div class="bloco"><h2>${esc(D.times[S.time])}: quem mais joga em cada posição contra os reservas</h2>
+      <div class="rolar"><table><thead><tr><th class="esq">Posição</th><th class="esq">Quem mais jogou</th><th>% dos min. possíveis</th><th>% titular</th><th>Reservas usados</th><th>Minutos dos reservas</th><th>% da posição com reservas</th></tr></thead><tbody>${resumoMeu}</tbody></table></div>
+      <p class="nota">Quanto maior a última coluna, mais o treinador roda a posição.</p></div>
+    <div class="bloco" style="margin-top:18px"><h2>Comparação entre times</h2>
+      <label style="font-size:13px;color:var(--suave);display:block;max-width:240px">Posição <select id="f-gpos">${ORD.map(x => `<option value="${x}"${x===g?" selected":""}>${NOME_GRUPO[x]}</option>`).join("")}</select></label>
+      <div class="rolar" style="margin-top:12px"><table><thead><tr><th class="esq">Time</th><th class="esq">Quem mais jogou</th><th>% dos min. possíveis</th><th>% titular</th><th class="esq">Segundo</th><th>% dos min. possíveis</th><th>Atletas usados</th><th>Concentração</th></tr></thead>
+      <tbody>${linhas.map(r => `<tr class="${r.t===S.time?"dest":""}"><td>${esc(r.nome)}</td><td class="esq"><button class="nome" data-a="${r.l.a}">${esc(D.atletas[r.l.a][0])}</button></td><td class="num">${pc(r.l.pct)}</td><td class="num">${pc(r.l.ptit)}</td>
+        <td class="esq">${r.s ? `<button class="nome" data-a="${r.s.a}">${esc(D.atletas[r.s.a][0])}</button>` : "—"}</td><td class="num">${r.s ? pc(r.s.pct) : "—"}</td><td class="num">${r.n}</td><td class="num">${pc(r.conc)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="nota">Concentração é a fatia dos minutos da posição que ficou com quem mais jogou. Nos outros times, as posições vêm da sugestão do ESPN e só ficam certas onde alguém corrigir pelo modo de edição.</p></div>`;
+  $("#f-gpos").addEventListener("input", e => { S.grupoPos = e.target.value; abaPosicao(); });
+}
+
+/* ---------------- Último jogo ---------------- */
+function abaUltimo(){
+  const jogos = jogosDoTime(S.time);
+  if (!jogos.length) { $("#app").innerHTML = '<p class="vazio">Nenhum jogo no período selecionado.</p>'; return; }
+  const j = jogos[jogos.length - 1], g = D.jogos[j], casa = g[2] === S.time;
+  const st = new Map(D.atlTime[S.time].map(a => [a, stats(a)]));
+  const no = [[],[],[]], fora = [];
+  for (const a of D.atlTime[S.time]) {
+    const r = D.part[a].get(j);
+    if (r) no[r[2]].push([a, S.met === "90" ? r[3] : (r[4] ?? r[3])]);
+    else if (st.get(a).rel > 0) fora.push([a, null]);
+  }
+  const ordem = l => l.sort((x,y) => ORD.indexOf(D.atletas[x[0]][2]) - ORD.indexOf(D.atletas[y[0]][2]) || (y[1]||0) - (x[1]||0));
+  const lista = (l, mostraMin) => `<ul class="lista">${ordem(l).map(([a,m]) => `<li><span><span class="pos">${D.atletas[a][2]}</span> <button class="nome" data-a="${a}">${esc(D.atletas[a][0])}</button></span><span>${mostraMin ? m + " min; " : ""}${pc(st.get(a).pct)} na temporada</span></li>`).join("") || "<li><span>Ninguém</span></li>"}</ul>`;
+  $("#app").innerHTML = `<div class="bloco"><h2>Último jogo no período</h2>
+      <div class="placar">${esc(D.times[g[2]])} ${g[4] ?? ""} x ${g[5] ?? ""} ${esc(D.times[g[3]])}</div>
+      <p class="nota">${dataLonga(g[1])}, ${casa ? "em casa" : "fora"}, ${D.competicoes[g[0]]}${g[6] ? ", " + g[6] + " minutos de jogo com acréscimos" : ""}</p></div>
+    <div class="grade" style="margin-top:18px">
+      <div class="bloco"><h2>Titulares</h2>${lista(no[0], true)}</div>
+      <div class="bloco"><h2>Entraram</h2>${lista(no[1], true)}<h3>No banco, não entraram</h3>${lista(no[2], false)}</div>
+      <div class="bloco"><h2>Não relacionados</h2>${lista(fora, false)}<p class="nota">Atletas que já foram relacionados na temporada e ficaram fora deste jogo.</p></div>
+    </div>`;
+}
+
+/* ---------------- edição de posições no GitHub ---------------- */
+function repoInfo(){
+  const dono = location.hostname.endsWith("github.io") ? location.hostname.split(".")[0] : (le("gh_dono") || "brunoputi");
+  const repo = location.pathname.split("/").filter(Boolean)[0] || "minutagem";
+  return {dono, repo, api: `https://api.github.com/repos/${dono}/${repo}`};
+}
+function abrirDialogo(msg){ $("#dlg-erro").textContent = msg || ""; $("#dlg-token").value = ""; $("#dlg").showModal(); }
+async function conectar(){
+  const tk = $("#dlg-token").value.trim();
+  if (!tk) { $("#dlg-erro").textContent = "Cole a chave de acesso."; return; }
+  $("#dlg-ok").disabled = true; $("#dlg-erro").textContent = "Verificando…";
+  try {
+    const r = await fetch(repoInfo().api, {headers:{Authorization:`Bearer ${tk}`, Accept:"application/vnd.github+json"}});
+    const j = await r.json();
+    if (!r.ok) throw new Error("A chave não tem acesso a este repositório.");
+    if (j.permissions && !j.permissions.push) throw new Error("A chave só tem leitura. Dê Read and write em Contents.");
+    guarda("gh_token", tk); $("#dlg").close(); S.editando = true; atualizarEdicao(); desenhar();
+  } catch(e) { $("#dlg-erro").textContent = e.message || "Não foi possível verificar a chave."; }
+  $("#dlg-ok").disabled = false;
+}
+function atualizarEdicao(){
+  const n = pendentes.size;
+  $("#barra-ed").classList.toggle("on", n > 0);
+  $("#ed-txt").textContent = n === 1 ? "1 posição alterada, ainda não salva" : `${n} posições alteradas, ainda não salvas`;
+}
+const b64ParaTexto = b => new TextDecoder("utf-8",{ignoreBOM:true}).decode(Uint8Array.from(atob(b.replace(/\s/g,"")), c => c.charCodeAt(0)));
+function textoParaB64(t){
+  const bytes = new TextEncoder().encode(t); let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+async function salvarGithub(){
+  const tk = le("gh_token"); if (!tk) { abrirDialogo(); return; }
+  const {api} = repoInfo(), h = {Authorization:`Bearer ${tk}`, Accept:"application/vnd.github+json"};
+  const mud = new Map([...pendentes].map(([a,g]) => [D.times[D.atletas[a][1]] + "|" + D.atletas[a][4], [a, g === "—" ? "" : g]]));
+  const btn = $("#ed-salvar"); btn.disabled = true; $("#ed-txt").textContent = "Salvando…";
+  try {
+    for (let tentativa = 0; tentativa < 3; tentativa++) {
+      const r = await fetch(`${api}/contents/posicoes.csv?ref=main&t=${Date.now()}`, {headers:h, cache:"no-store"});
+      if (r.status === 401) { guarda("gh_token", null); throw new Error("chave"); }
+      if (!r.ok) throw new Error("Não consegui ler o posicoes.csv (" + r.status + ").");
+      const j = await r.json();
+      let txt = b64ParaTexto(j.content);
+      const bom = txt.charCodeAt(0) === 0xFEFF; if (bom) txt = txt.slice(1);
+      const linhas = txt.split(/\r?\n/), cab = linhas[0].split(";");
+      const iT = cab.indexOf("time"), iA = cab.indexOf("atleta_id"), iM = cab.indexOf("grupo_manual");
+      const feitos = new Set();
+      for (let i = 1; i < linhas.length; i++) {
+        if (!linhas[i]) continue;
+        const c = linhas[i].split(";"), chave = c[iT] + "|" + c[iA];
+        if (mud.has(chave)) { while (c.length <= iM) c.push(""); c[iM] = mud.get(chave)[1]; linhas[i] = c.join(";"); feitos.add(chave); }
+      }
+      while (linhas.length && linhas[linhas.length-1] === "") linhas.pop();
+      for (const [chave, [a, g]] of mud) if (!feitos.has(chave)) {
+        const at = D.atletas[a]; linhas.push([D.times[at[1]], at[4], at[0], at[3], "", g].join(";"));
+      }
+      const novo = (bom ? "\uFEFF" : "") + linhas.join("\r\n") + "\r\n";
+      const put = await fetch(`${api}/contents/posicoes.csv`, {method:"PUT", headers:h, body: JSON.stringify({
+        message: `Posições ajustadas pelo painel (${mud.size})`, content: textoParaB64(novo), sha: j.sha, branch: "main"})});
+      if (put.ok) {
+        fetch(`${api}/actions/workflows/atualizar.yml/dispatches`, {method:"POST", headers:h, body: JSON.stringify({ref:"main"})}).catch(() => {});
+        for (const [a, g] of pendentes) D.grupoOriginal[a] = g;
+        pendentes.clear();
+        $("#barra-ed").classList.add("on");
+        $("#ed-txt").textContent = "Salvo. O painel se atualiza para todos em cerca de 3 minutos.";
+        setTimeout(atualizarEdicao, 6000);
+        desenhar(); btn.disabled = false; return;
+      }
+      if (put.status !== 409 && put.status !== 422) throw new Error("O GitHub recusou a gravação (" + put.status + "). Confira se a chave tem Read and write em Contents.");
+    }
+    throw new Error("Outra atualização estava em andamento. Tente salvar de novo em 1 minuto.");
+  } catch(e) {
+    if (e.message === "chave") abrirDialogo("A chave expirou ou foi revogada. Gere uma nova.");
+    else $("#ed-txt").textContent = e.message;
+  }
+  btn.disabled = false;
+}
+
+iniciar();
+</script>
+</body>
+</html>
