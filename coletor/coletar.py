@@ -161,6 +161,7 @@ def processar_jogo(ev, det):
             jogadores[aid] = {
                 "time": t, "nome": ath.get("displayName", "?"),
                 "pos": (p.get("position") or {}).get("abbreviation", ""),
+                "camisa": str(p.get("jersey") or ""),
                 "starter": bool(p.get("starter")), "subbedIn": bool(p.get("subbedIn")),
             }
             for n in (ath.get("displayName"), ath.get("shortName"), ath.get("fullName")):
@@ -242,7 +243,7 @@ def processar_jogo(ev, det):
                 mr = max(0, fimr - (ini[1] or 0))
             else:
                 mr = None
-        linhas.append([j["time"], aid, j["nome"], j["pos"], st, m90, mr])
+        linhas.append([j["time"], aid, j["nome"], j["pos"], st, m90, mr, j["camisa"]])
 
     alertas = []
     for t in times:
@@ -252,6 +253,55 @@ def processar_jogo(ev, det):
             alertas.append(f"{ev['data']} [{t}] soma {soma} ≠ {11 * DURACAO - perda}")
     return {"lados": lados, "duracao": total, "linhas": linhas,
             "alertas": alertas, "nao_casadas": nao_casadas}
+
+
+# ------------------------------------------------------------------ perfis dos atletas
+PERFIS = CACHE / "perfis.json"
+MAX_PERFIS_POR_EXECUCAO = 1200
+
+
+def buscar_perfil(aid):
+    urls = [f"https://sports.core.api.espn.com/v2/sports/soccer/athletes/{aid}",
+            f"https://site.web.api.espn.com/apis/common/v3/sports/soccer/athletes/{aid}"]
+    for u in urls:
+        d = get(u)
+        if not d:
+            continue
+        a = d.get("athlete", d)
+        nasc = (a.get("dateOfBirth") or "")[:10]
+        bp = a.get("birthPlace") or {}
+        nac = (a.get("citizenship") or (a.get("citizenshipCountry") or {}).get("abbreviation")
+               or bp.get("country") or "")
+        foto = (a.get("headshot") or {}).get("href", "") if isinstance(a.get("headshot"), dict) else ""
+        nome = a.get("fullName") or a.get("displayName") or ""
+        if nasc or nome:
+            return {"ok": True, "nome": nome, "nasc": nasc, "nac": nac,
+                    "alt": a.get("displayHeight", "") or "", "peso": a.get("displayWeight", "") or "",
+                    "foto": foto, "local": ", ".join(x for x in (bp.get("city", ""), bp.get("country", "")) if x),
+                    "tentado": date.today().isoformat()}
+    return {"ok": False, "tentado": date.today().isoformat()}
+
+
+def carregar_perfis(ids):
+    perfis = json.loads(PERFIS.read_text(encoding="utf-8")) if PERFIS.exists() else {}
+    hoje = date.today()
+
+    def precisa(i):
+        p = perfis.get(i)
+        if not p:
+            return True
+        dias = (hoje - date.fromisoformat(p.get("tentado", "2000-01-01"))).days
+        return (not p.get("ok") and dias >= 30) or dias >= 180
+
+    faltam = [i for i in ids if precisa(i)][:MAX_PERFIS_POR_EXECUCAO]
+    print(f"[perfis] buscando {len(faltam)} atletas")
+    for i in faltam:
+        perfis[i] = buscar_perfil(i)
+        time.sleep(0.2)
+    PERFIS.write_text(json.dumps(perfis, ensure_ascii=False), encoding="utf-8")
+    ok = sum(1 for i in ids if perfis.get(i, {}).get("ok"))
+    print(f"[perfis] {ok} de {len(ids)} atletas com perfil")
+    return perfis
 
 
 # ------------------------------------------------------------------ posições
@@ -309,10 +359,12 @@ def main():
 
     # sugestão de posição: posição mais frequente em campo (ignora SUB)
     pos_cont = defaultdict(Counter)
-    nomes = {}
+    nomes, camisas = {}, {}
     for _, _, res in jogos:
-        for t, aid, nome, pos, st, *_ in res["linhas"]:
+        for t, aid, nome, pos, st, *resto in res["linhas"]:
             nomes[(t, aid)] = nome
+            if len(resto) > 2 and resto[2]:
+                camisas[(t, aid)] = resto[2]
             if st != 2 and pos not in ("", "SUB"):
                 pos_cont[(t, aid)][pos] += 1
     sugestoes = {k: (n, pos_cont[k].most_common(1)[0][0] if pos_cont[k] else "—")
@@ -325,7 +377,8 @@ def main():
     ti = {t: i for i, t in enumerate(times)}
     chaves = sorted(nomes, key=lambda k: (k[0], nomes[k]))
     ai = {k: i for i, k in enumerate(chaves)}
-    atletas = [[nomes[k], ti[k[0]], grupos.get(k, "—"), sugestoes[k][1]] for k in chaves]
+    atletas = [[nomes[k], ti[k[0]], grupos.get(k, "—"), sugestoes[k][1], k[1], camisas.get(k, "")]
+               for k in chaves]
     lista_jogos, part = [], []
     for liga, ev, res in sorted(jogos, key=lambda x: x[1]["data"]):
         casa, fora = res["lados"].get("home"), res["lados"].get("away")
@@ -334,7 +387,7 @@ def main():
         gi = len(lista_jogos)
         lista_jogos.append([ligas.index(liga), ev["data"], ti[casa], ti[fora],
                             ev.get("gols_casa"), ev.get("gols_fora"), res["duracao"]])
-        for t, aid, nome, pos, st, m90, mr in res["linhas"]:
+        for t, aid, nome, pos, st, m90, mr, *_ in res["linhas"]:
             part.append([gi, ai[(t, aid)], st, m90, mr])
 
     dados = {
@@ -346,6 +399,11 @@ def main():
     }
     (SAIDA / "dados.json").write_text(json.dumps(dados, ensure_ascii=False, separators=(",", ":")),
                                       encoding="utf-8")
+    perfis = carregar_perfis(sorted({k[1] for k in chaves}))
+    (SAIDA / "perfis.json").write_text(json.dumps(
+        {i: [p["nome"], p["nasc"], p["nac"], p["alt"], p["peso"], p["foto"], p["local"]]
+         for i, p in perfis.items() if p.get("ok")}, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8")
     (CACHE / "auditoria.txt").write_text(
         f"ALERTAS ({len(alertas)})\n" + "\n".join(alertas) +
         f"\n\nTROCAS NÃO CASADAS ({len(nao_casadas)})\n" + "\n".join(nao_casadas), encoding="utf-8")
