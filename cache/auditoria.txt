@@ -1,0 +1,6 @@
+ALERTAS (3)
+2026-05-31 [Palmeiras] soma 1033 ≠ 943
+2026-05-31 [Chapecoense] soma 1080 ≠ 990
+2026-08-16 [Corinthians] soma 980 ≠ 990
+
+TROCAS NÃO CASADAS (0)
